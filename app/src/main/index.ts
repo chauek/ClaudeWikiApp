@@ -84,7 +84,8 @@ ipcMain.handle('dialog:openFolder', async () => {
 // --- IPC: filesystem ---
 
 ipcMain.handle('fs:readTree', (_event, knowledgePath: string): TreeItem[] => {
-  return buildTree(knowledgePath, knowledgePath)
+  const knowledgeDir = join(knowledgePath, 'knowledge')
+  return buildTree(knowledgePath, knowledgeDir)
 })
 
 ipcMain.handle('fs:readNode', (_event, fsPath: string): NodeContent | null => {

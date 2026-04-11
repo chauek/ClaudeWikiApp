@@ -21,6 +21,7 @@ export default function App(): JSX.Element {
 
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     window.api.getSettings().then((s) => {
@@ -154,6 +155,8 @@ export default function App(): JSX.Element {
           activeView={activeView}
           onViewChange={setActiveView}
           pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
         />
 
         <div className="content-area">

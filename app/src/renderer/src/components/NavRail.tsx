@@ -4,17 +4,30 @@ interface NavRailProps {
   activeView: ActiveView
   onViewChange: (view: ActiveView) => void
   pendingTodosCount: number
+  collapsed: boolean
+  onToggleCollapse: () => void
 }
 
-export function NavRail({ activeView, onViewChange, pendingTodosCount }: NavRailProps): JSX.Element {
+export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed, onToggleCollapse }: NavRailProps): JSX.Element {
   return (
-    <nav className="sidebar">
+    <nav className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
+      <div className="sidebar-upper">
+      <div className="sidebar-toggle-row">
+        <button
+          className="sidebar-toggle-btn"
+          onClick={onToggleCollapse}
+          title={collapsed ? 'Rozwiń menu' : 'Zwiń menu'}
+        >
+          <IconChevron collapsed={collapsed} />
+        </button>
+      </div>
       <div className="sidebar-top">
         <SidebarItem
           icon={<IconHome />}
           label="Baza wiedzy"
           active={activeView === 'home'}
           onClick={() => onViewChange('home')}
+          collapsed={collapsed}
         />
         <SidebarItem
           icon={<IconTodo />}
@@ -22,13 +35,16 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount }: NavRail
           active={activeView === 'todos'}
           onClick={() => onViewChange('todos')}
           badge={pendingTodosCount > 0 ? pendingTodosCount : undefined}
+          collapsed={collapsed}
         />
         <SidebarItem
           icon={<IconClaude />}
           label="Claude"
           active={activeView === 'claude'}
           onClick={() => onViewChange('claude')}
+          collapsed={collapsed}
         />
+      </div>
       </div>
       <div className="sidebar-bottom">
         <SidebarItem
@@ -36,6 +52,7 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount }: NavRail
           label="Ustawienia"
           active={activeView === 'settings'}
           onClick={() => onViewChange('settings')}
+          collapsed={collapsed}
         />
       </div>
     </nav>
@@ -48,19 +65,30 @@ interface SidebarItemProps {
   active: boolean
   onClick: () => void
   badge?: number
+  collapsed?: boolean
 }
 
-function SidebarItem({ icon, label, active, onClick, badge }: SidebarItemProps): JSX.Element {
+function SidebarItem({ icon, label, active, onClick, badge, collapsed }: SidebarItemProps): JSX.Element {
   return (
     <button
       className={`sidebar-item${active ? ' sidebar-item--active' : ''}`}
       onClick={onClick}
-      title={label}
+      title={collapsed ? label : undefined}
     >
       <span className="sidebar-item-icon">{icon}</span>
-      <span className="sidebar-item-label">{label}</span>
-      {badge !== undefined && <span className="sidebar-badge">{badge}</span>}
+      {!collapsed && <span className="sidebar-item-label">{label}</span>}
+      {!collapsed && badge !== undefined && <span className="sidebar-badge">{badge}</span>}
+      {collapsed && badge !== undefined && <span className="sidebar-badge sidebar-badge--dot" />}
     </button>
+  )
+}
+
+function IconChevron({ collapsed }: { collapsed: boolean }): JSX.Element {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+      style={{ transform: collapsed ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }}>
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
   )
 }
 
