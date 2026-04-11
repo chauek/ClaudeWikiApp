@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pl"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "inverse-on-surface": "#565555",
+                    "inverse-surface": "#fcf9f8",
+                    "on-error": "#490106",
+                    "on-background": "#e7e5e5",
+                    "on-tertiary": "#006443",
+                    "outline-variant": "#474848",
+                    "secondary-dim": "#e39100",
+                    "surface-container": "#191a1a",
+                    "secondary-fixed-dim": "#ffcb8e",
+                    "error": "#ee7d77",
+                    "outline": "#757575",
+                    "tertiary-fixed-dim": "#58e7ab",
+                    "primary-container": "#3323cc",
+                    "secondary": "#f59e0a",
+                    "on-tertiary-fixed-variant": "#006544",
+                    "on-secondary-fixed-variant": "#815100",
+                    "on-primary-container": "#cecbff",
+                    "on-tertiary-container": "#005a3c",
+                    "error-dim": "#bb5551",
+                    "surface-dim": "#121212",
+                    "surface-variant": "#252626",
+                    "on-secondary-container": "#ffaf40",
+                    "error-container": "#7f2927",
+                    "on-secondary-fixed": "#5b3700",
+                    "surface-container-lowest": "#000000",
+                    "on-surface-variant": "#acabab",
+                    "on-secondary": "#472a00",
+                    "tertiary": "#9bffce",
+                    "surface-container-high": "#1f2020",
+                    "on-primary-fixed-variant": "#4a40e0",
+                    "tertiary-fixed": "#69f6b8",
+                    "tertiary-container": "#69f6b8",
+                    "secondary-fixed": "#ffddb8",
+                    "surface": "#121212",
+                    "surface-bright": "#2b2c2c",
+                    "secondary-container": "#563400",
+                    "on-error-container": "#ff9993",
+                    "on-primary": "#2b15c6",
+                    "background": "#121212",
+                    "tertiary-dim": "#58e7ab",
+                    "on-surface": "#e7e5e5",
+                    "surface-container-low": "#131313",
+                    "on-primary-fixed": "#2a13c5",
+                    "on-tertiary-fixed": "#00452d",
+                    "primary-fixed": "#e2dfff",
+                    "primary-dim": "#b3b1ff",
+                    "inverse-primary": "#4e45e4",
+                    "surface-container-highest": "#252626",
+                    "primary-fixed-dim": "#d2d0ff",
+                    "surface-tint": "#c3c0ff",
+                    "primary": "#c3c0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #252626;
+            border-radius: 10px;
+        }
+        .tonal-shift {
+            background: linear-gradient(180deg, #0e0e0e 0%, #121212 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-hidden flex flex-col h-screen">
+<!-- Global System Top Bar (Matching SCREEN_9) -->
+<div class="h-10 bg-black border-b border-outline-variant/10 flex items-center justify-center shrink-0 z-50">
+<span class="text-xs font-headline font-bold text-on-surface-variant uppercase tracking-widest">CloudeWiki</span>
+</div>
+<div class="flex flex-1 w-full overflow-hidden">
+<!-- SideNavBar (Matching SCREEN_9) -->
+<aside class="hidden md:flex flex-col h-full w-64 bg-[#131313] py-6 space-y-2 border-r border-outline-variant/15 shrink-0">
+<nav class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 text-[#acabab] px-4 py-3 ml-2 hover:bg-[#1f2020] hover:text-[#e7e5e5] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="space_dashboard">space_dashboard</span>
+<span class="font-['Inter'] text-[14px] font-medium">Workspace</span>
+</a>
+<a class="flex items-center space-x-3 text-[#c3c0ff] font-bold bg-[#1f2020] rounded-lg ml-2 px-4 py-3 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="check_circle">check_circle</span>
+<span class="font-['Inter'] text-[14px]">Task Board</span>
+</a>
+<a class="flex items-center space-x-3 text-[#acabab] px-4 py-3 ml-2 hover:bg-[#1f2020] hover:text-[#e7e5e5] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-['Inter'] text-[14px] font-medium">Knowledge Graph</span>
+</a>
+<a class="flex items-center space-x-3 text-[#acabab] px-4 py-3 ml-2 hover:bg-[#1f2020] hover:text-[#e7e5e5] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span class="font-['Inter'] text-[14px] font-medium">Archive</span>
+</a>
+<a class="flex items-center space-x-3 text-[#acabab] px-4 py-3 ml-2 hover:bg-[#1f2020] hover:text-[#e7e5e5] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span class="font-['Inter'] text-[14px] font-medium">Claude</span>
+</a>
+</nav>
+<div class="px-4 mt-auto space-y-1">
+<a class="flex items-center space-x-3 text-[#acabab] px-4 py-3 hover:bg-[#1f2020] hover:text-[#e7e5e5] transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-['Inter'] text-[14px] font-medium">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col bg-surface overflow-hidden">
+<!-- TopNavBar (Matching SCREEN_9) -->
+<header class="flex justify-between items-center px-8 py-4 w-full bg-[#0e0e0e] tonal-shift shrink-0">
+<div class="flex items-center space-x-8">
+<div class="hidden lg:flex bg-surface-container-high rounded-full px-4 py-1.5 items-center space-x-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface placeholder-on-surface-variant/50 w-64" placeholder="Szukaj zadań..." type="text"/>
+</div>
+<nav class="flex items-center space-x-6 text-sm">
+<a class="text-[#c3c0ff] border-b-2 border-[#c3c0ff] pb-1 font-medium" href="#">Recent</a>
+<a class="text-[#acabab] hover:text-[#e7e5e5] transition-all duration-300" href="#">Favorites</a>
+</nav>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto bg-surface-container-low">
+<div class="max-w-5xl mx-auto px-8 py-12">
+<!-- Header Section -->
+<!-- Department List (Restyled to match SCREEN_9 middle column) -->
+<div class="space-y-4">
+<!-- Garaż (EXPANDED Style) -->
+<section class="space-y-1">
+<div class="flex items-center justify-between p-4 bg-surface-container-high rounded-t-xl border-b border-outline-variant/10 cursor-pointer">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-primary-container/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">construction</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Garaż</h3>
+<p class="text-xs text-on-surface-variant">Ostatnia aktywność dzisiaj</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary rotate-90">expand_more</span>
+</div>
+<!-- Sub-items (Tasks restyled as SCREEN_9 sub-items) -->
+<div class="bg-surface-container-high/40 rounded-b-xl pb-2">
+<div class="flex items-center justify-between px-14 py-3 hover:bg-primary-container/10 transition-colors group cursor-pointer">
+<div class="flex items-center space-x-3"><span class="material-symbols-outlined text-primary text-lg">check_box_outline_blank</span>
+<span class="text-sm text-on-surface font-semibold">Zainstalować gniazdka elektryczne</span></div>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">drag_indicator</span>
+</div>
+<div class="flex items-center justify-between px-14 py-3 hover:bg-surface-container-highest transition-colors group cursor-pointer">
+<div class="flex items-center space-x-3"><span class="material-symbols-outlined text-primary text-lg">check_box_outline_blank</span>
+<span class="text-sm text-on-surface">Uporządkować regał z narzędziami</span></div>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">drag_indicator</span>
+</div>
+<div class="flex items-center justify-between px-14 py-3 hover:bg-surface-container-highest transition-colors group cursor-pointer">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-primary text-lg" style="font-variation-settings: 'FILL' 1;">check_box</span>
+<span class="text-sm text-on-surface-variant line-through">Wymienić olej w kosiarce</span>
+</div>
+<span class="material-symbols-outlined text-xs text-on-surface-variant opacity-0 group-hover:opacity-100 transition-opacity">drag_indicator</span>
+</div>
+</div>
+</section>
+<!-- Dom (COLLAPSED Style) -->
+<div class="group flex items-center justify-between p-4 bg-surface-container-high rounded-xl hover:bg-surface-bright transition-all cursor-pointer">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-xl">home</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Dom</h3>
+<p class="text-xs text-on-surface-variant">8 aktywnych zadań</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<!-- Monitoring (COLLAPSED Style) -->
+<div class="group flex items-center justify-between p-4 bg-surface-container-high rounded-xl hover:bg-surface-bright transition-all cursor-pointer">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-xl">videocam</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Monitoring</h3>
+<p class="text-xs text-on-surface-variant">4 aktywne alerty</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+<!-- Ogród (COLLAPSED Style) -->
+<div class="group flex items-center justify-between p-4 bg-surface-container-high rounded-xl hover:bg-surface-bright transition-all cursor-pointer">
+<div class="flex items-center space-x-4">
+<div class="w-10 h-10 bg-surface-container-highest rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-xl">potted_plant</span>
+</div>
+<div>
+<h3 class="font-bold text-on-surface">Ogród</h3>
+<p class="text-xs text-on-surface-variant">Sezonowy przegląd w toku</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</div>
+<!-- Bento Grid - Status Overview -->
+<div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 bg-surface-container-high p-6 rounded-2xl relative overflow-hidden group border border-outline-variant/10">
+<div class="relative z-10">
+<h3 class="font-headline font-bold text-lg mb-2">Postęp tygodniowy</h3>
+<p class="text-on-surface-variant text-sm mb-6">Zrealizowałeś 85% zaplanowanych zadań.</p>
+<div class="flex items-end gap-2 h-24">
+<div class="w-full bg-primary/20 rounded-t-lg h-12 transition-all group-hover:h-16"></div>
+<div class="w-full bg-primary/20 rounded-t-lg h-16 transition-all group-hover:h-20"></div>
+<div class="w-full bg-primary/20 rounded-t-lg h-8 transition-all group-hover:h-12"></div>
+<div class="w-full bg-primary/20 rounded-t-lg h-20 transition-all group-hover:h-24"></div>
+<div class="w-full bg-primary rounded-t-lg h-24"></div>
+<div class="w-full bg-primary/10 rounded-t-lg h-4 transition-all group-hover:h-6"></div>
+<div class="w-full bg-primary/10 rounded-t-lg h-4 transition-all group-hover:h-6"></div>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-10">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">insights</span>
+</div>
+</div>
+<div class="bg-surface-container-high p-6 rounded-2xl flex flex-col justify-between group border border-outline-variant/10">
+<div>
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">priority_high</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Krytyczne</span>
+</div>
+<h3 class="font-headline font-bold text-2xl">4 Zlecenia</h3>
+<p class="text-on-surface-variant text-xs mt-1">Wymagają natychmiastowej uwagi.</p>
+</div>
+<button class="mt-6 flex items-center justify-center gap-2 py-2 bg-surface-container-highest hover:bg-surface-bright rounded-lg text-xs font-bold transition-colors">
+                            ZOBACZ WSZYSTKIE
+                            <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Visual Asset -->
+<div class="mt-12 rounded-3xl overflow-hidden h-64 relative group">
+<img class="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" data-alt="Modern dark architecture workspace with soft overhead lighting and clean lines, obsidian aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKkOi6Kar2nYu7mE6_ei5wku9t2GldPTHUAsqw7Q2lxfDu190N_jfjqA5PU5vxm9e4J2_mX4YyhGCJ_mQOF439fBB0wBEYjtu1uN-bGdLCFN59trQn_SwBfXgwUrjTmjq-WyOwXPDVWOGwx5FSHtJvLKCNA1zvNbnXDKkkhC3svI8WNyQceNmVgTORcYTWFTnlaTrKz8FTRP57-C8Z_U2Wp2-rVA28avl6d5qx3TJRb479m9Pkq3zTLN6T0_a0u2A-Yi11T46MTSA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent"></div>
+<div class="absolute bottom-8 left-8">
+<span class="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-2 block">Systemowy Spokój</span>
+<h4 class="font-headline text-2xl font-bold max-w-sm">"Porządek w otoczeniu to porządek w myślach."</h4>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Contextual FAB (Matching SCREEN_9 color) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center group active:scale-95 transition-transform hover:rotate-90 z-50">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</body></html>
