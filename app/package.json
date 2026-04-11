@@ -20,9 +20,11 @@
     ]
   },
   "dependencies": {
+    "@types/d3-force": "^3.0.10",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
     "chokidar": "^3.6.0",
+    "d3-force": "^3.0.0",
     "electron-store": "^8.2.0",
     "gray-matter": "^4.0.3",
     "node-pty": "^1.1.0",

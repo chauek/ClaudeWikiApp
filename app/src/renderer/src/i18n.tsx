@@ -8,6 +8,7 @@ const translations = {
   'nav.collapseMenu':    { pl: 'Zwiń menu',         en: 'Collapse menu' },
   'nav.knowledgeBase':   { pl: 'Baza wiedzy',       en: 'Knowledge Base' },
   'nav.tasks':           { pl: 'Zadania',           en: 'Tasks' },
+  'nav.graph':            { pl: 'Graf wiedzy',        en: 'Knowledge Graph' },
   'nav.settings':        { pl: 'Ustawienia',        en: 'Settings' },
 
   // ── Settings ──────────────────────────────────────────
@@ -77,6 +78,16 @@ const translations = {
 
   // ── Breadcrumb ────────────────────────────────────────
   'breadcrumb.home':     { pl: 'Strona główna', en: 'Home' },
+
+  // ── GraphView ─────────────────────────────────────────
+  'graph.empty':           { pl: 'Graf jest pusty — dodaj połączenia między nodami', en: 'Graph is empty — add connections between nodes' },
+  'graph.overview':        { pl: 'Przegląd grafu',     en: 'Graph Overview' },
+  'graph.totalNodes':      { pl: 'Węzły',              en: 'Total Nodes' },
+  'graph.connections':     { pl: 'Połączenia',          en: 'Connections' },
+  'graph.highConnections': { pl: 'Wysoka łączność',     en: 'High connections' },
+  'graph.hasOpenTodos':    { pl: 'Ma otwarte zadania',  en: 'Has open tasks' },
+  'graph.fitView':         { pl: 'Dopasuj widok',       en: 'Fit to view' },
+  'graph.openNode':        { pl: 'Otwórz nod',          en: 'Open node' },
 } as const
 
 type TranslationKey = keyof typeof translations

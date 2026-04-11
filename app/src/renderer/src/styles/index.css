@@ -1598,6 +1598,333 @@ ul { list-style: none; }
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Knowledge Graph View
+═══════════════════════════════════════════════════════════ */
+
+.graph-view {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.graph-view--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graph-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* ─── SVG Canvas ─────────────────────────────────────────── */
+
+.graph-canvas {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  display: block;
+}
+
+.graph-canvas:active {
+  cursor: grabbing;
+}
+
+/* ─── Edges ──────────────────────────────────────────────── */
+
+.graph-edge {
+  stroke: var(--accent-dim);
+  stroke-width: 1;
+  opacity: 0.25;
+  transition: opacity .2s, stroke .2s;
+}
+
+.graph-edge--highlighted {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+
+.graph-edge--dimmed {
+  opacity: 0.06;
+}
+
+/* ─── Nodes ──────────────────────────────────────────────── */
+
+.graph-node {
+  cursor: pointer;
+}
+
+.graph-node-glow {
+  fill: var(--accent);
+  opacity: 0.08;
+}
+
+.graph-node-circle {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1.5;
+  transition: fill .2s, stroke .2s, opacity .2s;
+}
+
+.graph-node-circle--hovered {
+  fill: var(--surface-3);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.graph-node-circle--selected {
+  fill: var(--surface-3);
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+.graph-node-circle--dimmed {
+  opacity: 0.2;
+}
+
+.graph-node-circle--has-todos {
+  stroke: var(--todo-pending);
+  stroke-width: 1.5;
+}
+
+.graph-node-circle--has-todos.graph-node-circle--hovered,
+.graph-node-circle--has-todos.graph-node-circle--selected {
+  stroke: var(--accent);
+}
+
+.graph-node-label {
+  fill: var(--text-2);
+  font-size: 11px;
+  font-weight: 500;
+  text-anchor: middle;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.graph-node-label--dimmed {
+  opacity: 0.15;
+}
+
+.graph-node-todo-dot {
+  fill: var(--todo-pending);
+}
+
+/* ─── Overlays ───────────────────────────────────────────── */
+
+.graph-overlay {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.graph-overlay--stats {
+  top: 20px;
+  left: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  min-width: 180px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0.92;
+}
+
+.graph-overlay--detail {
+  top: 20px;
+  right: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  max-width: 280px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0.95;
+  pointer-events: auto;
+}
+
+.graph-overlay-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  color: var(--text-3);
+  margin-bottom: 14px;
+}
+
+.graph-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.graph-stat-label {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.graph-stat-value {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--accent);
+}
+
+.graph-legend {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.graph-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+.graph-legend-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.graph-legend-dot--accent {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent);
+}
+
+.graph-legend-dot--todo {
+  background: var(--todo-pending);
+}
+
+/* ─── Detail panel ───────────────────────────────────────── */
+
+.graph-detail-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.graph-detail-path {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: var(--text-3);
+  margin-bottom: 10px;
+}
+
+.graph-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.graph-detail-tag {
+  font-size: 10px;
+  padding: 1px 8px;
+  border-radius: 99px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.graph-detail-connections {
+  margin-bottom: 12px;
+}
+
+.graph-detail-connections-title {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--text-3);
+  margin-bottom: 6px;
+}
+
+.graph-detail-connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-2);
+  padding: 3px 0;
+}
+
+.graph-detail-connection-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-dim);
+  flex-shrink: 0;
+}
+
+.graph-detail-open-btn {
+  width: 100%;
+  padding: 8px 0;
+  background: var(--accent-bg);
+  border: 1px solid rgba(195,192,255,.2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-align: center;
+  transition: background .15s;
+}
+
+.graph-detail-open-btn:hover {
+  background: rgba(195,192,255,.18);
+}
+
+/* ─── Controls (bottom-right) ────────────────────────────── */
+
+.graph-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.graph-control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 50%;
+  color: var(--text-2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background .15s, color .15s;
+}
+
+.graph-control-btn:hover {
+  background: var(--surface-3);
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
    Light theme override
 ═══════════════════════════════════════════════════════════ */
 

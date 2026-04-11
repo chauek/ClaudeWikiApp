@@ -6,10 +6,11 @@ import { NodeDetail } from './components/NodeDetail'
 import { TodoView } from './components/TodoView'
 import { TerminalView } from './components/TerminalView'
 import { Settings } from './components/Settings'
+import { GraphView } from './components/GraphView'
 import { I18nProvider, useT } from './i18n'
 import type { Lang } from './i18n'
 
-export type ActiveView = 'home' | 'todos' | 'claude' | 'settings'
+export type ActiveView = 'home' | 'todos' | 'graph' | 'claude' | 'settings'
 export type Theme = 'system' | 'light' | 'dark'
 
 export default function App(): JSX.Element {
@@ -202,6 +203,14 @@ export default function App(): JSX.Element {
                 />
               ) : activeView === 'todos' ? (
                 <TodoView todos={todos} knowledgePath={knowledgePath} />
+              ) : activeView === 'graph' ? (
+                <GraphView
+                  knowledgePath={knowledgePath}
+                  onNavigateToNode={(nodePath) => {
+                    handleNavigateToConnection(nodePath)
+                    setActiveView('home')
+                  }}
+                />
               ) : activeView !== 'claude' ? (
                 <div className="home-view">
                   <DepartmentList
