@@ -99,7 +99,7 @@ export default function App(): JSX.Element {
 
   const loadTodos = useCallback((path: string) => {
     window.api.readTodos(path).then((data) => {
-      if (data) setTodos(data.todos.filter((t) => t.status !== 'done'))
+      if (data) setTodos(data.todos)
     })
   }, [])
 
