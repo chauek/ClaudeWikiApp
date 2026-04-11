@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join } from 'path'
-import { readFileSync, readdirSync, statSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
 import { execFile } from 'child_process'
 import * as pty from 'node-pty'
 import Store from 'electron-store'
@@ -109,6 +109,20 @@ ipcMain.handle('fs:readTodos', (_event, knowledgePath: string): TodosFile | null
     return JSON.parse(raw) as TodosFile
   } catch {
     return null
+  }
+})
+
+ipcMain.handle('fs:writeTodoStatus', (_event, knowledgePath: string, todoId: string, status: string): boolean => {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+    const todo = data.todos.find(t => t.id === todoId)
+    if (!todo) return false
+    todo.status = status as TodosFile['todos'][number]['status']
+    writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch {
+    return false
   }
 })
 

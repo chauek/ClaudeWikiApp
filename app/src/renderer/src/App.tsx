@@ -173,7 +173,7 @@ export default function App(): JSX.Element {
               onTerminalChange={handleTerminalChange}
             />
           ) : activeView === 'todos' ? (
-            <TodoView todos={todos} />
+            <TodoView todos={todos} knowledgePath={knowledgePath} />
           ) : activeView !== 'claude' ? (
             <div className="home-view">
               <DepartmentList

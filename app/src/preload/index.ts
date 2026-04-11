@@ -23,6 +23,9 @@ const api = {
   readTodos: (knowledgePath: string): Promise<TodosFile | null> =>
     ipcRenderer.invoke('fs:readTodos', knowledgePath),
 
+  writeTodoStatus: (knowledgePath: string, todoId: string, status: string): Promise<boolean> =>
+    ipcRenderer.invoke('fs:writeTodoStatus', knowledgePath, todoId, status),
+
   readGraph: (knowledgePath: string): Promise<GraphData | null> =>
     ipcRenderer.invoke('fs:readGraph', knowledgePath),
 
