@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { TreeItem, NodeContent, TodoItem } from '../../shared/types'
 import { NavRail } from './components/NavRail'
-import { NodeGrid } from './components/NodeGrid'
+import { DepartmentList } from './components/DepartmentList'
 import { NodeDetail } from './components/NodeDetail'
 import { TodoView } from './components/TodoView'
 import { TerminalView } from './components/TerminalView'
 import { Settings } from './components/Settings'
-import { Breadcrumb } from './components/Breadcrumb'
 
 export type ActiveView = 'home' | 'todos' | 'claude' | 'settings'
 export type Theme = 'system' | 'light' | 'dark'
@@ -20,8 +19,6 @@ export default function App(): JSX.Element {
   const [theme, setTheme] = useState<Theme>('system')
   const [terminalId, setTerminalId] = useState<string>('terminal')
 
-  // Home navigation state
-  const [navStack, setNavStack] = useState<TreeItem[]>([]) // dirs traversed
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
 
@@ -89,28 +86,12 @@ export default function App(): JSX.Element {
     })
   }, [knowledgePath, openNodeItem, loadTree, loadTodos])
 
-  // Current grid items = root or deepest dir in navStack
-  const currentItems =
-    navStack.length === 0 ? tree : navStack[navStack.length - 1].children ?? []
-
-  const handleCardClick = useCallback(async (item: TreeItem) => {
-    if (item.isDirectory) {
-      setNavStack((prev) => [...prev, item])
-      setOpenNode(null)
-      setOpenNodeItem(null)
-    } else {
-      const node = await window.api.readNode(item.fsPath)
-      if (node) {
-        setOpenNode(node)
-        setOpenNodeItem(item)
-      }
+  const handleNodeSelect = useCallback(async (item: TreeItem) => {
+    const node = await window.api.readNode(item.fsPath)
+    if (node) {
+      setOpenNode(node)
+      setOpenNodeItem(item)
     }
-  }, [])
-
-  const handleBreadcrumbNav = useCallback((index: number) => {
-    setNavStack((prev) => (index === -1 ? [] : prev.slice(0, index + 1)))
-    setOpenNode(null)
-    setOpenNodeItem(null)
   }, [])
 
   const handleNavigateToConnection = useCallback(
@@ -120,7 +101,6 @@ export default function App(): JSX.Element {
       const node = await window.api.readNode(fsPath)
       if (node) {
         setOpenNode(node)
-        // Build a fake TreeItem so breadcrumb shows correct title
         setOpenNodeItem({
           name: connectionPath.split('/').pop() + '.md',
           fsPath,
@@ -136,82 +116,92 @@ export default function App(): JSX.Element {
   const handlePathSet = useCallback((path: string) => {
     setKnowledgePath(path)
     setActiveView('home')
-    setNavStack([])
     setOpenNode(null)
     setOpenNodeItem(null)
   }, [])
 
-  // Breadcrumb items
-  const breadcrumbItems = navStack.map((item, i) => ({
-    label: getFolderTitle(item),
-    onClick: () => handleBreadcrumbNav(i)
-  }))
-  if (openNodeItem) {
-    breadcrumbItems.push({
-      label: openNodeItem.frontmatter?.title ?? openNodeItem.name.replace('.md', ''),
-      onClick: undefined
-    })
-  }
+  const topBar = (
+    <div className="top-bar">
+      <span className="top-bar-title">ClaudeWiki</span>
+    </div>
+  )
 
   if (loading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
+      <div className="app-wrapper">
+        {topBar}
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+        </div>
       </div>
     )
   }
 
   if (!knowledgePath) {
-    return <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} terminalId={terminalId} onTerminalChange={handleTerminalChange} />
+    return (
+      <div className="app-wrapper">
+        {topBar}
+        <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} terminalId={terminalId} onTerminalChange={handleTerminalChange} />
+      </div>
+    )
   }
 
   return (
-    <div className="app-layout">
-      <NavRail
-        activeView={activeView}
-        onViewChange={setActiveView}
-        pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
-      />
+    <div className="app-wrapper">
+      {topBar}
+      <div className="app-body">
+        <NavRail
+          activeView={activeView}
+          onViewChange={setActiveView}
+          pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
+        />
 
-      <div className="content-area">
-        <TerminalView knowledgePath={knowledgePath} active={activeView === 'claude'} />
+        <div className="content-area">
+          <TerminalView knowledgePath={knowledgePath} active={activeView === 'claude'} />
 
-        {activeView === 'settings' ? (
-          <Settings
-            currentPath={knowledgePath}
-            onPathSet={handlePathSet}
-            onCancel={() => setActiveView('home')}
-            theme={theme}
-            onThemeChange={handleThemeChange}
-            terminalId={terminalId}
-            onTerminalChange={handleTerminalChange}
-          />
-        ) : activeView === 'todos' ? (
-          <TodoView todos={todos} />
-        ) : activeView !== 'claude' ? (
-          <div className="home-view">
-            {(navStack.length > 0 || openNodeItem) && (
-              <Breadcrumb
-                items={breadcrumbItems}
-                onRoot={() => handleBreadcrumbNav(-1)}
+          {activeView === 'settings' ? (
+            <Settings
+              currentPath={knowledgePath}
+              onPathSet={handlePathSet}
+              onCancel={() => setActiveView('home')}
+              theme={theme}
+              onThemeChange={handleThemeChange}
+              terminalId={terminalId}
+              onTerminalChange={handleTerminalChange}
+            />
+          ) : activeView === 'todos' ? (
+            <TodoView todos={todos} />
+          ) : activeView !== 'claude' ? (
+            <div className="home-view">
+              <DepartmentList
+                tree={tree}
+                selectedPath={openNodeItem?.fsPath ?? null}
+                onSelectNode={handleNodeSelect}
               />
-            )}
-            {openNode ? (
-              <NodeDetail
-                node={openNode}
-                onNavigate={handleNavigateToConnection}
-              />
-            ) : (
-              <NodeGrid items={currentItems} onCardClick={handleCardClick} />
-            )}
-          </div>
-        ) : null}
+              <div className="home-detail">
+                {openNode ? (
+                  <NodeDetail
+                    node={openNode}
+                    onNavigate={handleNavigateToConnection}
+                    filePath={openNodeItem?.relativePath}
+                  />
+                ) : (
+                  <div className="home-detail-empty">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25, marginBottom: 12 }}>
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                    </svg>
+                    <span>Wybierz dokument z listy</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   )
 }
 
-function getFolderTitle(item: TreeItem): string {
-  const idx = item.children?.find((c) => c.name === 'index.md')
-  return idx?.frontmatter?.title ?? item.name
-}

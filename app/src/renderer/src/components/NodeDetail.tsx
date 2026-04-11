@@ -5,14 +5,30 @@ import type { NodeContent } from '../../../shared/types'
 interface NodeDetailProps {
   node: NodeContent
   onNavigate: (connectionPath: string) => void
+  filePath?: string   // relative path, e.g. "Garaz/Elektryka/node.md"
 }
 
-export function NodeDetail({ node, onNavigate }: NodeDetailProps): JSX.Element {
+export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX.Element {
   const { frontmatter, content } = node
+
+  // Build breadcrumb segments from relative path (exclude last filename)
+  const pathSegments = filePath
+    ? filePath.replace(/\.md$/, '').split('/').slice(0, -1)
+    : []
 
   return (
     <div className="node-detail">
       <header className="node-detail-header">
+        {pathSegments.length > 0 && (
+          <div className="node-detail-path">
+            {pathSegments.map((seg, i) => (
+              <span key={i} className="node-detail-path-segment">
+                {i > 0 && <span className="node-detail-path-sep">/</span>}
+                {seg}
+              </span>
+            ))}
+          </div>
+        )}
         <h1 className="node-detail-title">{frontmatter.title}</h1>
         <div className="node-detail-meta">
           {frontmatter.tags && frontmatter.tags.length > 0 && (
