@@ -1,4 +1,5 @@
 import type { TreeItem } from '../../../shared/types'
+import { useT, useLang } from '../i18n'
 
 interface NodeGridProps {
   items: TreeItem[]
@@ -6,10 +7,12 @@ interface NodeGridProps {
 }
 
 export function NodeGrid({ items, onCardClick }: NodeGridProps): JSX.Element {
+  const t = useT()
+  const lang = useLang()
   if (items.length === 0) {
     return (
       <div className="grid-empty">
-        <p>Brak nodów w tym folderze</p>
+        <p>{t('grid.noNodes')}</p>
       </div>
     )
   }
@@ -19,7 +22,7 @@ export function NodeGrid({ items, onCardClick }: NodeGridProps): JSX.Element {
     if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
     if (a.name === 'index.md') return -1
     if (b.name === 'index.md') return 1
-    return getDisplayTitle(a).localeCompare(getDisplayTitle(b), 'pl')
+    return getDisplayTitle(a).localeCompare(getDisplayTitle(b), lang)
   })
 
   return (
@@ -37,6 +40,7 @@ interface NodeCardProps {
 }
 
 function NodeCard({ item, onClick }: NodeCardProps): JSX.Element {
+  const t = useT()
   const isDir = item.isDirectory
   const title = getDisplayTitle(item)
   const tags = getDisplayTags(item)
@@ -60,10 +64,10 @@ function NodeCard({ item, onClick }: NodeCardProps): JSX.Element {
       </div>
       <div className="node-card-footer">
         {childCount !== undefined && (
-          <span className="node-card-meta">{childCount} elementów</span>
+          <span className="node-card-meta">{childCount} {t('grid.elements')}</span>
         )}
         {hasTodos && (
-          <span className="node-card-todo-dot" title="Ma otwarte zadania" />
+          <span className="node-card-todo-dot" title={t('grid.hasOpenTasks')} />
         )}
       </div>
     </button>

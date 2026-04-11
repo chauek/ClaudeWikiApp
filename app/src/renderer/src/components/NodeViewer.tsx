@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { NodeContent } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface NodeViewerProps {
   node: NodeContent | null
@@ -8,11 +9,12 @@ interface NodeViewerProps {
 }
 
 export function NodeViewer({ node, onNavigate }: NodeViewerProps): JSX.Element {
+  const t = useT()
   if (!node) {
     return (
       <div className="node-empty">
         <span className="node-empty-icon">◈</span>
-        <p>Wybierz nod z drzewa projektów</p>
+        <p>{t('viewer.selectNode')}</p>
       </div>
     )
   }
@@ -35,7 +37,7 @@ export function NodeViewer({ node, onNavigate }: NodeViewerProps): JSX.Element {
           )}
           <div className="node-dates">
             {frontmatter.updated && (
-              <span className="node-date">Aktualizacja: {frontmatter.updated}</span>
+              <span className="node-date">{t('viewer.update')}: {frontmatter.updated}</span>
             )}
           </div>
         </div>
@@ -69,7 +71,7 @@ export function NodeViewer({ node, onNavigate }: NodeViewerProps): JSX.Element {
 
       {frontmatter.connections && frontmatter.connections.length > 0 && (
         <div className="node-connections">
-          <h3 className="connections-title">Połączenia</h3>
+          <h3 className="connections-title">{t('viewer.connections')}</h3>
           <div className="connections-list">
             {frontmatter.connections.map((conn) => (
               <button
@@ -87,7 +89,7 @@ export function NodeViewer({ node, onNavigate }: NodeViewerProps): JSX.Element {
 
       {frontmatter.todos && frontmatter.todos.length > 0 && (
         <div className="node-todos-section">
-          <h3 className="todos-section-title">TODO w tym nodzie</h3>
+          <h3 className="todos-section-title">{t('viewer.todosInNode')}</h3>
           <ul className="node-todos-list">
             {frontmatter.todos.map((todo, i) => (
               <li

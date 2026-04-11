@@ -1,24 +1,31 @@
-# ClaudeWiki - Instrukcje dla Claude
+# ClaudeWikiApp - Instructions for Claude
 
-## Czym jest ten projekt
+## What is this project
 
-Aplikacja desktopowa (Electron + React) do przeglądania osobistej bazy wiedzy w formie plików Markdown.
+A desktop application (Electron + React) for browsing a personal knowledge base stored as Markdown files.
 
-Kod aplikacji: `app/`
-Dokumentacja architektury: `docs/architecture-app.md`
+Application code: `app/`
+Architecture documentation: `docs/architecture-app.md`
 
-## Baza wiedzy
+## Knowledge Base
 
-Baza wiedzy to **osobny folder**, niezależny od tego repozytorium:
-`/Users/chauek/Documents/prywatne/Baza_Wiedzy/`
+The knowledge base is a **separate folder**, independent of this repository.
+Each developer sets their own path in `.env` (see `.env.example`):
 
-**Schemat bazy wiedzy, format nodów, zasady tagowania, aktualizacji graph.json i todos.json
-są zdefiniowane w `Baza_Wiedzy/CLAUDE.md` — to jest jedyne źródło prawdy dla struktury danych.**
+```
+KNOWLEDGE_PATH=/path/to/your/knowledge-base
+```
 
-Jeśli struktura danych się zmienia (nowe pole w frontmatter, zmiana schematu graph.json itp.),
-aktualizuj **tylko** `Baza_Wiedzy/CLAUDE.md`. Aplikacja dostosowuje się do danych, nie odwrotnie.
+If `.env` is missing or `KNOWLEDGE_PATH` is not set, ask the user for their knowledge base path before doing any wiki data work.
 
-## Architektura aplikacji desktopowej
+**The wiki scaffold template** (CLAUDE.md, _meta/, _templates/, knowledge/index.md) lives in
+`app/resources/wiki-scaffold/`. This is the single source of truth for knowledge base structure.
+The app auto-installs these files into any selected knowledge folder if they're missing.
 
-Szczegółowy opis architektury Electron app znajduje się w `docs/architecture-app.md`.
-Przed rozpoczęciem pracy nad aplikacją przeczytaj ten plik.
+If the data structure changes (new frontmatter field, graph.json schema change, etc.),
+update **only** `app/resources/wiki-scaffold/CLAUDE.md`. The app will propagate it to new folders.
+
+## Desktop Application Architecture
+
+A detailed description of the Electron app architecture is in `docs/architecture-app.md`.
+Read that file before starting any work on the application.

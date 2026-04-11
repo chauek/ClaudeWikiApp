@@ -19,6 +19,9 @@ npm-debug.log*
 .vscode/
 .idea/
 
+# Local environment
+.env
+
 # Claude Code local settings
 .claude/settings.local.json
 

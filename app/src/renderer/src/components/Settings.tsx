@@ -1,11 +1,6 @@
-import { useState, useEffect } from 'react'
 import type { Theme } from '../App'
-
-interface TerminalOption {
-  id: string
-  name: string
-  appPath: string
-}
+import type { Lang } from '../i18n'
+import { useT } from '../i18n'
 
 interface SettingsProps {
   currentPath: string | null
@@ -13,22 +8,23 @@ interface SettingsProps {
   onCancel?: () => void
   theme: Theme
   onThemeChange: (theme: Theme) => void
-  terminalId: string
-  onTerminalChange: (id: string) => void
+  lang: Lang
+  onLangChange: (lang: Lang) => void
 }
 
-const THEMES: { value: Theme; label: string }[] = [
-  { value: 'system', label: 'System' },
-  { value: 'light',  label: 'Jasny' },
-  { value: 'dark',   label: 'Ciemny' }
+const LANGS: { value: Lang; label: string }[] = [
+  { value: 'en', label: 'English' },
+  { value: 'pl', label: 'Polski' }
 ]
 
-export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChange, terminalId, onTerminalChange }: SettingsProps): JSX.Element {
-  const [terminals, setTerminals] = useState<TerminalOption[]>([])
+export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChange, lang, onLangChange }: SettingsProps): JSX.Element {
+  const t = useT()
 
-  useEffect(() => {
-    window.api.detectTerminals().then(setTerminals)
-  }, [])
+  const THEMES: { value: Theme; label: string }[] = [
+    { value: 'system', label: t('settings.themeSystem') },
+    { value: 'light',  label: t('settings.themeLight') },
+    { value: 'dark',   label: t('settings.themeDark') }
+  ]
 
   const handleChooseFolder = async (): Promise<void> => {
     const path = await window.api.openFolderDialog()
@@ -36,11 +32,6 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
       await window.api.setSetting('knowledgePath', path)
       onPathSet(path)
     }
-  }
-
-  const handleTerminalChange = async (id: string): Promise<void> => {
-    onTerminalChange(id)
-    await window.api.setSetting('terminalId', id)
   }
 
   return (
@@ -58,53 +49,51 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
         </div>
 
         <p className="settings-desc">
-          Przeglądarka osobistej bazy wiedzy zarządzanej przez Claude.
+          {t('settings.desc')}
         </p>
 
         <div className="settings-section">
-          <label className="settings-label">Folder bazy wiedzy</label>
+          <label className="settings-label">{t('settings.folderLabel')}</label>
           <div className={`settings-path-box${!currentPath ? ' settings-path-box--empty' : ''}`}>
-            {currentPath ?? 'Nie skonfigurowano'}
+            {currentPath ?? t('settings.notConfigured')}
           </div>
           <button className="settings-btn" onClick={handleChooseFolder}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
-            {currentPath ? 'Zmień folder' : 'Wybierz folder'}
+            {currentPath ? t('settings.changeFolder') : t('settings.chooseFolder')}
           </button>
         </div>
 
-        {terminals.length > 0 && (
-          <div className="settings-section">
-            <label className="settings-label">Terminal dla Claude</label>
-            <div className="theme-picker">
-              {terminals.map((t) => (
-                <button
-                  key={t.id}
-                  className={`theme-btn${terminalId === t.id ? ' theme-btn--active' : ''}`}
-                  onClick={() => handleTerminalChange(t.id)}
-                >
-                  <span className="theme-btn-icon"><IconTerminal /></span>
-                  {t.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="settings-section">
-          <label className="settings-label">Motyw</label>
+          <label className="settings-label">{t('settings.themeLabel')}</label>
           <div className="theme-picker">
-            {THEMES.map((t) => (
+            {THEMES.map((th) => (
               <button
-                key={t.value}
-                className={`theme-btn${theme === t.value ? ' theme-btn--active' : ''}`}
-                onClick={() => onThemeChange(t.value)}
+                key={th.value}
+                className={`theme-btn${theme === th.value ? ' theme-btn--active' : ''}`}
+                onClick={() => onThemeChange(th.value)}
               >
                 <span className="theme-btn-icon">
-                  {t.value === 'system' ? <IconSystem /> : t.value === 'light' ? <IconLight /> : <IconDark />}
+                  {th.value === 'system' ? <IconSystem /> : th.value === 'light' ? <IconLight /> : <IconDark />}
                 </span>
-                {t.label}
+                {th.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <label className="settings-label">{t('settings.languageLabel')}</label>
+          <div className="theme-picker">
+            {LANGS.map((l) => (
+              <button
+                key={l.value}
+                className={`theme-btn${lang === l.value ? ' theme-btn--active' : ''}`}
+                onClick={() => onLangChange(l.value)}
+              >
+                <span className="theme-btn-icon"><IconLang /></span>
+                {l.label}
               </button>
             ))}
           </div>
@@ -112,7 +101,7 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
 
         {onCancel && (
           <button className="settings-cancel" onClick={onCancel}>
-            Zamknij
+            {t('settings.close')}
           </button>
         )}
       </div>
@@ -146,19 +135,20 @@ function IconLight(): JSX.Element {
   )
 }
 
-function IconTerminal(): JSX.Element {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="4 17 10 11 4 5" />
-      <line x1="12" y1="19" x2="20" y2="19" />
-    </svg>
-  )
-}
-
 function IconDark(): JSX.Element {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  )
+}
+
+function IconLang(): JSX.Element {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
   )
 }

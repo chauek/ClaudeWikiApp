@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { TreeItem } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface DepartmentListProps {
   tree: TreeItem[]
@@ -8,10 +9,11 @@ interface DepartmentListProps {
 }
 
 export function DepartmentList({ tree, selectedPath, onSelectNode }: DepartmentListProps): JSX.Element {
+  const t = useT()
   return (
     <div className="home-departments">
       {tree.length === 0 ? (
-        <div className="home-departments-empty">Brak działów</div>
+        <div className="home-departments-empty">{t('dept.noDepartments')}</div>
       ) : (
         tree.map((item) => (
           <DeptItem
@@ -35,6 +37,7 @@ interface DeptItemProps {
 }
 
 function DeptItem({ item, depth, selectedPath, onSelectNode }: DeptItemProps): JSX.Element {
+  const t = useT()
   const [expanded, setExpanded] = useState(depth === 0)
 
   // Auto-expand when a descendant is selected
@@ -97,7 +100,7 @@ function DeptItem({ item, depth, selectedPath, onSelectNode }: DeptItemProps): J
             </div>
             <div className="dept-row-info">
               <span className="dept-row-name">{label}</span>
-              <span className="dept-row-meta">{docCount} dokumentów</span>
+              <span className="dept-row-meta">{docCount} {t('dept.documents')}</span>
             </div>
           </div>
           {hasChildren && (

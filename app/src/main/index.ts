@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join } from 'path'
-import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
-import { execFile } from 'child_process'
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSync, copyFileSync } from 'fs'
+
 import * as pty from 'node-pty'
 import Store from 'electron-store'
 import matter from 'gray-matter'
@@ -37,9 +37,10 @@ function createWindow(): void {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
 
-  // Start watcher if path is already configured
+  // Scaffold and start watcher if path is already configured
   const knowledgePath = store.get('knowledgePath')
   if (knowledgePath) {
+    scaffoldKnowledgeFolder(knowledgePath)
     setupWatcher(knowledgePath, mainWindow)
   }
 }
@@ -65,6 +66,7 @@ ipcMain.handle('settings:get', () => {
 ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
   store.set(key, value)
   if (key === 'knowledgePath' && typeof value === 'string' && mainWindow) {
+    scaffoldKnowledgeFolder(value)
     setupWatcher(value, mainWindow)
   }
   return true
@@ -75,7 +77,7 @@ ipcMain.handle('settings:set', (_event, key: string, value: unknown) => {
 ipcMain.handle('dialog:openFolder', async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
     properties: ['openDirectory'],
-    title: 'Wybierz folder bazy wiedzy'
+    title: 'Select knowledge base folder'
   })
   if (result.canceled || result.filePaths.length === 0) return null
   return result.filePaths[0]
@@ -179,43 +181,39 @@ ipcMain.handle('shell:openExternal', (_event, url: string) => {
   shell.openExternal(url)
 })
 
-const TERMINALS: { id: string; name: string; appPath: string }[] = [
-  { id: 'terminal',  name: 'Terminal',  appPath: '/System/Applications/Utilities/Terminal.app' },
-  { id: 'iterm2',   name: 'iTerm2',    appPath: '/Applications/iTerm.app' },
-  { id: 'warp',     name: 'Warp',      appPath: '/Applications/Warp.app' },
-  { id: 'ghostty',  name: 'Ghostty',   appPath: '/Applications/Ghostty.app' },
-]
+// --- Scaffold ---
 
-ipcMain.handle('shell:detectTerminals', () => {
-  return TERMINALS.filter((t) => {
-    try { statSync(t.appPath); return true } catch { return false }
-  })
-})
+function getScaffoldPath(): string {
+  // In dev: resources/ is next to src/; in production: it's in app.asar or resources/
+  const devPath = join(__dirname, '../../resources/wiki-scaffold')
+  if (existsSync(devPath)) return devPath
+  return join(process.resourcesPath, 'wiki-scaffold')
+}
 
-ipcMain.handle('shell:openClaude', (_event, knowledgePath: string, terminalId: string) => {
-  const safe = knowledgePath.replace(/"/g, '\\"')
-  const cmd = `cd "${safe}" && claude`
+function scaffoldKnowledgeFolder(knowledgePath: string): void {
+  const scaffold = getScaffoldPath()
+  if (!existsSync(scaffold)) return
 
-  switch (terminalId) {
-    case 'iterm2':
-      execFile('osascript', ['-e', `
-        tell application "iTerm2"
-          create window with default profile command "bash -lc '${cmd.replace(/'/g, "'\\''")}'"
-        end tell`])
-      break
-    case 'warp':
-      execFile('open', ['-a', 'Warp', knowledgePath])
-      break
-    case 'ghostty':
-      execFile('open', ['-a', 'Ghostty', '--args',
-        `--working-directory=${knowledgePath}`, '-e', 'claude'])
-      break
-    case 'terminal':
-    default:
-      execFile('osascript', ['-e', `tell app "Terminal" to do script "${cmd.replace(/"/g, '\\"')}"`])
-      break
+  const filesToCopy: [string, string[]][] = [
+    ['CLAUDE.md', []],
+    [join('_meta', 'graph.json'), ['_meta']],
+    [join('_meta', 'todos.json'), ['_meta']],
+    [join('_templates', 'node.md'), ['_templates']],
+    [join('knowledge', 'index.md'), ['knowledge']]
+  ]
+
+  for (const [file, dirs] of filesToCopy) {
+    // Ensure parent directories exist
+    for (const dir of dirs) {
+      const dirPath = join(knowledgePath, dir)
+      if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true })
+    }
+    const dest = join(knowledgePath, file)
+    if (!existsSync(dest)) {
+      copyFileSync(join(scaffold, file), dest)
+    }
   }
-})
+}
 
 // --- Helpers ---
 

@@ -1,6 +1,7 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { NodeContent } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface NodeDetailProps {
   node: NodeContent
@@ -9,6 +10,7 @@ interface NodeDetailProps {
 }
 
 export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX.Element {
+  const t = useT()
   const { frontmatter, content } = node
 
   const pathSegments = filePath
@@ -41,7 +43,7 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
             </div>
           )}
           {frontmatter.updated && (
-            <span className="node-detail-date">Zaktualizowano {frontmatter.updated}</span>
+            <span className="node-detail-date">{t('node.updated')} {frontmatter.updated}</span>
           )}
         </div>
       </header>
@@ -74,7 +76,7 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
       {/* ── Todos ────────────────────────────────────────────── */}
       {frontmatter.todos && frontmatter.todos.length > 0 && (
         <section className="node-detail-todos">
-          <h2 className="node-detail-section-title">Zadania</h2>
+          <h2 className="node-detail-section-title">{t('node.tasks')}</h2>
           <ul className="node-detail-todo-list">
             {frontmatter.todos.map((todo, i) => (
               <li key={i} className={`detail-todo detail-todo--${todo.status}`}>
@@ -93,7 +95,7 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
       {/* ── Connections ─────────────────────────────────────── */}
       {frontmatter.connections && frontmatter.connections.length > 0 && (
         <section className="node-detail-connections">
-          <h2 className="node-detail-section-title">Połączenia</h2>
+          <h2 className="node-detail-section-title">{t('node.connections')}</h2>
           <div className="detail-connections-grid">
             {frontmatter.connections.map((conn) => (
               <button

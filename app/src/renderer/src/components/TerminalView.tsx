@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import '@xterm/xterm/css/xterm.css'
+import { useLang } from '../i18n'
 
 interface TerminalViewProps {
   knowledgePath: string
@@ -9,6 +10,7 @@ interface TerminalViewProps {
 }
 
 export function TerminalView({ knowledgePath, active }: TerminalViewProps): JSX.Element {
+  const lang = useLang()
   const wrapperRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
@@ -61,7 +63,8 @@ export function TerminalView({ knowledgePath, active }: TerminalViewProps): JSX.
 
     removeDataRef.current = window.api.onPtyData((data) => term.write(data))
     removeExitRef.current = window.api.onPtyExit(() => {
-      term.write('\r\n\x1b[90m[Sesja zakończona]\x1b[0m\r\n')
+      const endMsg = lang === 'pl' ? '[Sesja zakończona]' : '[Session ended]'
+      term.write(`\r\n\x1b[90m${endMsg}\x1b[0m\r\n`)
     })
     term.onData((data) => window.api.ptyInput(data))
 

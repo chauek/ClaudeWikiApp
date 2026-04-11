@@ -6,6 +6,8 @@ import { NodeDetail } from './components/NodeDetail'
 import { TodoView } from './components/TodoView'
 import { TerminalView } from './components/TerminalView'
 import { Settings } from './components/Settings'
+import { I18nProvider, useT } from './i18n'
+import type { Lang } from './i18n'
 
 export type ActiveView = 'home' | 'todos' | 'claude' | 'settings'
 export type Theme = 'system' | 'light' | 'dark'
@@ -17,7 +19,8 @@ export default function App(): JSX.Element {
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [activeView, setActiveView] = useState<ActiveView>('home')
   const [theme, setTheme] = useState<Theme>('system')
-  const [terminalId, setTerminalId] = useState<string>('terminal')
+
+  const [lang, setLang] = useState<Lang>('en')
 
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
@@ -27,7 +30,8 @@ export default function App(): JSX.Element {
     window.api.getSettings().then((s) => {
       if (s.knowledgePath) setKnowledgePath(s.knowledgePath)
       if (s.theme) setTheme(s.theme as Theme)
-      if (s.terminalId) setTerminalId(s.terminalId as string)
+
+      if (s.lang) setLang(s.lang as Lang)
       setLoading(false)
     })
   }, [])
@@ -47,8 +51,9 @@ export default function App(): JSX.Element {
     await window.api.setSetting('theme', newTheme)
   }, [])
 
-  const handleTerminalChange = useCallback((id: string) => {
-    setTerminalId(id)
+  const handleLangChange = useCallback(async (newLang: Lang) => {
+    setLang(newLang)
+    await window.api.setSetting('lang', newLang)
   }, [])
 
   const loadTree = useCallback(
@@ -127,83 +132,80 @@ export default function App(): JSX.Element {
     </div>
   )
 
-  if (loading) {
-    return (
-      <div className="app-wrapper">
-        {topBar}
-        <div className="loading-screen">
-          <div className="loading-spinner" />
-        </div>
-      </div>
-    )
-  }
-
-  if (!knowledgePath) {
-    return (
-      <div className="app-wrapper">
-        {topBar}
-        <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} terminalId={terminalId} onTerminalChange={handleTerminalChange} />
-      </div>
-    )
-  }
-
   return (
-    <div className="app-wrapper">
-      {topBar}
-      <div className="app-body">
-        <NavRail
-          activeView={activeView}
-          onViewChange={setActiveView}
-          pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
-        />
-
-        <div className="content-area">
-          <TerminalView knowledgePath={knowledgePath} active={activeView === 'claude'} />
-
-          {activeView === 'settings' ? (
-            <Settings
-              currentPath={knowledgePath}
-              onPathSet={handlePathSet}
-              onCancel={() => setActiveView('home')}
-              theme={theme}
-              onThemeChange={handleThemeChange}
-              terminalId={terminalId}
-              onTerminalChange={handleTerminalChange}
+    <I18nProvider lang={lang}>
+      <div className="app-wrapper">
+        {topBar}
+        {loading ? (
+          <div className="loading-screen">
+            <div className="loading-spinner" />
+          </div>
+        ) : !knowledgePath ? (
+          <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} lang={lang} onLangChange={handleLangChange} />
+        ) : (
+          <div className="app-body">
+            <NavRail
+              activeView={activeView}
+              onViewChange={setActiveView}
+              pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
             />
-          ) : activeView === 'todos' ? (
-            <TodoView todos={todos} knowledgePath={knowledgePath} />
-          ) : activeView !== 'claude' ? (
-            <div className="home-view">
-              <DepartmentList
-                tree={tree}
-                selectedPath={openNodeItem?.fsPath ?? null}
-                onSelectNode={handleNodeSelect}
-              />
-              <div className="home-detail">
-                {openNode ? (
-                  <NodeDetail
-                    node={openNode}
-                    onNavigate={handleNavigateToConnection}
-                    filePath={openNodeItem?.relativePath}
+
+            <div className="content-area">
+              <TerminalView knowledgePath={knowledgePath} active={activeView === 'claude'} />
+
+              {activeView === 'settings' ? (
+                <Settings
+                  currentPath={knowledgePath}
+                  onPathSet={handlePathSet}
+                  onCancel={() => setActiveView('home')}
+                  theme={theme}
+                  onThemeChange={handleThemeChange}
+                  lang={lang}
+                  onLangChange={handleLangChange}
+                />
+              ) : activeView === 'todos' ? (
+                <TodoView todos={todos} knowledgePath={knowledgePath} />
+              ) : activeView !== 'claude' ? (
+                <div className="home-view">
+                  <DepartmentList
+                    tree={tree}
+                    selectedPath={openNodeItem?.fsPath ?? null}
+                    onSelectNode={handleNodeSelect}
                   />
-                ) : (
-                  <div className="home-detail-empty">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25, marginBottom: 12 }}>
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                    </svg>
-                    <span>Wybierz dokument z listy</span>
+                  <div className="home-detail">
+                    {openNode ? (
+                      <NodeDetail
+                        node={openNode}
+                        onNavigate={handleNavigateToConnection}
+                        filePath={openNodeItem?.relativePath}
+                      />
+                    ) : (
+                      <HomeDetailEmpty />
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        )}
       </div>
+    </I18nProvider>
+  )
+}
+
+function HomeDetailEmpty(): JSX.Element {
+  const t = useT()
+  return (
+    <div className="home-detail-empty">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25, marginBottom: 12 }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+      <span>{t('app.selectDocument')}</span>
     </div>
   )
 }

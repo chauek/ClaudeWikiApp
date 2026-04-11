@@ -32,12 +32,6 @@ const api = {
   openExternal: (url: string): Promise<void> =>
     ipcRenderer.invoke('shell:openExternal', url),
 
-  detectTerminals: (): Promise<{ id: string; name: string; appPath: string }[]> =>
-    ipcRenderer.invoke('shell:detectTerminals'),
-
-  openClaude: (knowledgePath: string, terminalId: string): Promise<void> =>
-    ipcRenderer.invoke('shell:openClaude', knowledgePath, terminalId),
-
   // Embedded terminal (PTY)
   ptyCreate: (knowledgePath: string): Promise<void> =>
     ipcRenderer.invoke('pty:create', knowledgePath),

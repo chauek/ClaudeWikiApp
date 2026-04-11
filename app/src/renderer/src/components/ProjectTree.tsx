@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { TreeItem } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface ProjectTreeProps {
   items: TreeItem[]
@@ -8,10 +9,11 @@ interface ProjectTreeProps {
 }
 
 export function ProjectTree({ items, selectedPath, onSelect }: ProjectTreeProps): JSX.Element {
+  const t = useT()
   return (
     <nav className="project-tree">
       {items.length === 0 ? (
-        <div className="tree-empty">Brak nodów</div>
+        <div className="tree-empty">{t('tree.noNodes')}</div>
       ) : (
         <TreeList items={items} selectedPath={selectedPath} onSelect={onSelect} depth={0} />
       )}
@@ -50,6 +52,7 @@ interface TreeNodeProps {
 }
 
 function TreeNode({ item, selectedPath, onSelect, depth }: TreeNodeProps): JSX.Element {
+  const t = useT()
   const isSelected = item.fsPath === selectedPath
   const hasChildren = item.isDirectory && item.children && item.children.length > 0
 
@@ -104,7 +107,7 @@ function TreeNode({ item, selectedPath, onSelect, depth }: TreeNodeProps): JSX.E
       >
         <span className="tree-icon">◈</span>
         <span className="tree-label">{label}</span>
-        {hasTodos && <span className="tree-todo-dot" title="Ma otwarte TODO" />}
+        {hasTodos && <span className="tree-todo-dot" title={t('tree.hasOpenTodo')} />}
       </button>
     </li>
   )

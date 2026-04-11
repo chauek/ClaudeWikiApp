@@ -1,4 +1,5 @@
 import type { ActiveView } from '../App'
+import { useT } from '../i18n'
 
 interface NavRailProps {
   activeView: ActiveView
@@ -9,6 +10,7 @@ interface NavRailProps {
 }
 
 export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed, onToggleCollapse }: NavRailProps): JSX.Element {
+  const t = useT()
   return (
     <nav className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
       <div className="sidebar-upper">
@@ -16,7 +18,7 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed
         <button
           className="sidebar-toggle-btn"
           onClick={onToggleCollapse}
-          title={collapsed ? 'Rozwiń menu' : 'Zwiń menu'}
+          title={collapsed ? t('nav.expandMenu') : t('nav.collapseMenu')}
         >
           <IconChevron collapsed={collapsed} />
         </button>
@@ -24,14 +26,14 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed
       <div className="sidebar-top">
         <SidebarItem
           icon={<IconHome />}
-          label="Baza wiedzy"
+          label={t('nav.knowledgeBase')}
           active={activeView === 'home'}
           onClick={() => onViewChange('home')}
           collapsed={collapsed}
         />
         <SidebarItem
           icon={<IconTodo />}
-          label="Zadania"
+          label={t('nav.tasks')}
           active={activeView === 'todos'}
           onClick={() => onViewChange('todos')}
           badge={pendingTodosCount > 0 ? pendingTodosCount : undefined}
@@ -49,7 +51,7 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed
       <div className="sidebar-bottom">
         <SidebarItem
           icon={<IconSettings />}
-          label="Ustawienia"
+          label={t('nav.settings')}
           active={activeView === 'settings'}
           onClick={() => onViewChange('settings')}
           collapsed={collapsed}

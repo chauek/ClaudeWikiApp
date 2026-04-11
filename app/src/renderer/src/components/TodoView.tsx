@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import type { TodoItem } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface TodoViewProps {
   todos: TodoItem[]
@@ -13,6 +14,7 @@ const COLOR_CYCLE = [
 ]
 
 export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
+  const t = useT()
   const groups = useMemo(() => {
     const map = new Map<string, { nodeTitle: string; nodePath: string; items: TodoItem[] }>()
     for (const todo of todos) {
@@ -26,8 +28,8 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
     return Array.from(map.values())
   }, [todos])
 
-  const totalPending    = todos.filter(t => t.status === 'pending').length
-  const totalInProgress = todos.filter(t => t.status === 'in_progress').length
+  const totalPending    = todos.filter(td => td.status === 'pending').length
+  const totalInProgress = todos.filter(td => td.status === 'in_progress').length
   const totalActive     = totalPending + totalInProgress
 
   if (todos.length === 0) {
@@ -36,7 +38,7 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
         <span className="todo-view-empty-icon">
           <IconCheck />
         </span>
-        <p>Brak otwartych zadań</p>
+        <p>{t('todo.noOpen')}</p>
       </div>
     )
   }
@@ -66,9 +68,9 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
               <div className="todo-bento-bg-icon">
                 <IconInsights />
               </div>
-              <h3 className="todo-bento-title">Przegląd zadań</h3>
+              <h3 className="todo-bento-title">{t('todo.overview')}</h3>
               <p className="todo-bento-subtitle">
-                {totalActive} aktywnych · {groups.length} kategorii
+                {totalActive} {t('todo.activeCategories').split(' · ')[0]} · {groups.length} {t('todo.activeCategories').split(' · ')[1]}
               </p>
               <div className="todo-bento-bars">
                 {(groups.length > 0 ? groups : groups).slice(0, 7).map((g, i, arr) => {
@@ -89,7 +91,7 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
               <div className="todo-bento-stat-head">
                 <span className="todo-bento-priority-icon"><IconPriority /></span>
                 <span className="todo-bento-stat-label">
-                  {totalInProgress > 0 ? 'W toku' : 'Oczekujące'}
+                  {totalInProgress > 0 ? t('todo.inProgress') : t('todo.pending')}
                 </span>
               </div>
               <div className="todo-bento-stat-num">
@@ -97,11 +99,11 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
               </div>
               <p className="todo-bento-stat-desc">
                 {totalInProgress > 0
-                  ? 'Zadań aktualnie w realizacji.'
-                  : 'Zadań czeka na start.'}
+                  ? t('todo.tasksInProgress')
+                  : t('todo.tasksWaiting')}
               </p>
               <button className="todo-bento-stat-btn">
-                POKAŻ WSZYSTKIE
+                {t('todo.showAll')}
                 <span className="todo-bento-stat-btn-icon"><IconArrow /></span>
               </button>
             </div>
@@ -137,11 +139,12 @@ function TodoGroup({
   accentColor: Accent
   knowledgePath: string
 }): JSX.Element {
+  const t = useT()
   const [open, setOpen] = useState(defaultOpen)
 
   // Snapshot of all items ever seen — survives watcher-triggered prop updates
   const [seenItems, setSeenItems] = useState<Map<string, TodoItem>>(
-    () => new Map(group.items.map(t => [t.id, t]))
+    () => new Map(group.items.map(item => [item.id, item]))
   )
   // Local status overrides (user clicks), separate from file state
   const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
@@ -150,7 +153,7 @@ function TodoGroup({
   useEffect(() => {
     setSeenItems(prev => {
       const next = new Map(prev)
-      for (const t of group.items) next.set(t.id, t)
+      for (const item of group.items) next.set(item.id, item)
       return next
     })
   }, [group.items])
@@ -163,19 +166,19 @@ function TodoGroup({
   }
 
   const displayItems = useMemo(
-    () => [...seenItems.values()].map(t => ({
-      ...t,
-      status: (statusOverride.get(t.id) ?? t.status) as TodoItem['status']
+    () => [...seenItems.values()].map(item => ({
+      ...item,
+      status: (statusOverride.get(item.id) ?? item.status) as TodoItem['status']
     })),
     [seenItems, statusOverride]
   )
 
-  const pendingCount  = displayItems.filter(t => t.status === 'pending').length
-  const inProgCount   = displayItems.filter(t => t.status === 'in_progress').length
+  const pendingCount  = displayItems.filter(ti => ti.status === 'pending').length
+  const inProgCount   = displayItems.filter(ti => ti.status === 'in_progress').length
 
   const subtitle = inProgCount > 0
-    ? `${inProgCount} w toku · ${pendingCount} oczekujących`
-    : `${pendingCount} aktywnych zadań`
+    ? `${inProgCount} ${t('todo.inProgressShort')} · ${pendingCount} ${t('todo.pendingShort')}`
+    : `${pendingCount} ${t('todo.activeTasks')}`
 
   return (
     <div className={`tg${open ? ' tg--open' : ''}`}>
@@ -221,7 +224,7 @@ function TodoGroup({
                   {todo.text}
                 </span>
                 {!done && todo.status === 'in_progress' && (
-                  <span className="tg-item-badge">w toku</span>
+                  <span className="tg-item-badge">{t('todo.inProgressShort')}</span>
                 )}
               </div>
             )

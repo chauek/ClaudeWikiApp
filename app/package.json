@@ -11,6 +11,14 @@
     "preview": "electron-vite preview",
     "start": "electron ."
   },
+  "build": {
+    "extraResources": [
+      {
+        "from": "resources/wiki-scaffold",
+        "to": "wiki-scaffold"
+      }
+    ]
+  },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",

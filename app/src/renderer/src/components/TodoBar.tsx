@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { TodoItem } from '../../../shared/types'
+import { useT } from '../i18n'
 
 interface TodoBarProps {
   todos: TodoItem[]
@@ -8,6 +9,7 @@ interface TodoBarProps {
 }
 
 export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps): JSX.Element {
+  const t = useT()
   const [filterCurrent, setFilterCurrent] = useState(false)
 
   const currentNodeRelPath = useMemo(() => {
@@ -35,10 +37,10 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
           <span>TODO</span>
           <span className="todo-count">
             {pendingCount > 0 && (
-              <span className="todo-badge todo-badge--pending">{pendingCount} oczekujące</span>
+              <span className="todo-badge todo-badge--pending">{pendingCount} {t('todobar.pending')}</span>
             )}
             {inProgressCount > 0 && (
-              <span className="todo-badge todo-badge--progress">{inProgressCount} w toku</span>
+              <span className="todo-badge todo-badge--progress">{inProgressCount} {t('todobar.inProgress')}</span>
             )}
           </span>
         </div>
@@ -46,9 +48,9 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
           <button
             className={`filter-btn${filterCurrent ? ' filter-btn--active' : ''}`}
             onClick={() => setFilterCurrent((f) => !f)}
-            title="Filtruj do aktualnego noda"
+            title={t('todobar.filterToNode')}
           >
-            Tylko ten nod
+            {t('todobar.onlyThisNode')}
           </button>
         )}
       </div>
@@ -56,7 +58,7 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
       <div className="todo-list">
         {visibleTodos.length === 0 ? (
           <div className="todo-empty">
-            {filterCurrent ? 'Brak TODO w tym nodzie' : 'Brak otwartych TODO'}
+            {filterCurrent ? t('todobar.noTodoInNode') : t('todobar.noOpenTodo')}
           </div>
         ) : (
           visibleTodos.map((todo) => (
