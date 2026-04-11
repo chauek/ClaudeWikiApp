@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import type { TreeItem, NodeContent, TodoItem } from '../../shared/types'
 import { NavRail } from './components/NavRail'
 import { DepartmentList } from './components/DepartmentList'
@@ -25,6 +25,41 @@ export default function App(): JSX.Element {
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  // Resizable department list
+  const [deptWidth, setDeptWidth] = useState(320)
+  const resizing = useRef(false)
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent): void => {
+      if (!resizing.current) return
+      e.preventDefault()
+      const container = document.querySelector('.home-view') as HTMLElement | null
+      if (!container) return
+      const rect = container.getBoundingClientRect()
+      const newWidth = Math.min(Math.max(e.clientX - rect.left, 180), rect.width - 200)
+      setDeptWidth(newWidth)
+    }
+    const onMouseUp = (): void => {
+      if (resizing.current) {
+        resizing.current = false
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+    }
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+  }, [])
+
+  const startResize = useCallback(() => {
+    resizing.current = true
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [])
 
   useEffect(() => {
     window.api.getSettings().then((s) => {
@@ -173,6 +208,11 @@ export default function App(): JSX.Element {
                     tree={tree}
                     selectedPath={openNodeItem?.fsPath ?? null}
                     onSelectNode={handleNodeSelect}
+                    width={deptWidth}
+                  />
+                  <div
+                    className="resize-handle"
+                    onMouseDown={startResize}
                   />
                   <div className="home-detail">
                     {openNode ? (

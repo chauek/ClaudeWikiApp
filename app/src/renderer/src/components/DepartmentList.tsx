@@ -6,12 +6,13 @@ interface DepartmentListProps {
   tree: TreeItem[]
   selectedPath: string | null
   onSelectNode: (item: TreeItem) => void
+  width: number
 }
 
-export function DepartmentList({ tree, selectedPath, onSelectNode }: DepartmentListProps): JSX.Element {
+export function DepartmentList({ tree, selectedPath, onSelectNode, width }: DepartmentListProps): JSX.Element {
   const t = useT()
   return (
-    <div className="home-departments">
+    <div className="home-departments" style={{ width }}>
       {tree.length === 0 ? (
         <div className="home-departments-empty">{t('dept.noDepartments')}</div>
       ) : (
