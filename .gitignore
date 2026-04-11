@@ -1,0 +1,27 @@
+# Dependencies
+app/node_modules/
+
+# Build output
+app/out/
+app/dist/
+
+# TypeScript incremental build info
+app/*.tsbuildinfo
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Electron builder artifacts
+app/dist-electron/
+release/

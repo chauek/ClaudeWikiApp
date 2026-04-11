@@ -1,0 +1,11 @@
+- Stack: Electron + Vite + React + TypeScript
+- Folder aplikacji: app/ w katalogu projektu
+- Persystencja ustawień: electron-store (plik JSON w ~/Library/Application Support/ClaudeWiki/)
+- Kluczowe ustawienie: knowledgePath — ścieżka do folderu z bazą wiedzy
+- IPC channels:
+    - dialog:openFolder → natywny dialog wyboru folderu
+    - settings:get / settings:set → odczyt i zapis ustawień
+- Wizualizacja grafu: D3.js lub Cytoscape.js, dane z _meta/graph.json
+- Obserwowanie zmian plików: Chokidar (live reload przy edycji przez Claude)
+- Widoki: drzewo projektów (lewy panel), widok noda / grafu (główny), lista TODO (dolny pasek)
+- Pierwsze do zbudowania: ekran ustawień z wyborem folderu wiedzy
