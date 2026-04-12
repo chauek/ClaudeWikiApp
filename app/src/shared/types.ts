@@ -67,3 +67,11 @@ export interface WatcherChange {
   event: WatcherEvent
   filePath: string
 }
+
+export type ScaffoldStatus = 'missing' | 'outdated' | 'current'
+
+export interface ScaffoldInfo {
+  status: ScaffoldStatus
+  appVersion: number
+  dirVersion: number | null
+}

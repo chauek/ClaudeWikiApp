@@ -25,6 +25,11 @@ const translations = {
   'settings.languageLabel':  { pl: 'Język',                 en: 'Language' },
   'settings.close':          { pl: 'Zamknij',               en: 'Close' },
 
+  'settings.scaffoldMissing':  { pl: 'Brak plików szablonu bazy wiedzy.',                 en: 'Knowledge base scaffold files are missing.' },
+  'settings.scaffoldOutdated': { pl: 'Pliki szablonu bazy wiedzy są nieaktualne.',        en: 'Knowledge base scaffold files are outdated.' },
+  'settings.scaffoldCreate':   { pl: 'Utwórz pliki szablonu',   en: 'Create scaffold files' },
+  'settings.scaffoldUpdate':   { pl: 'Aktualizuj pliki szablonu', en: 'Update scaffold files' },
+
   // ── App ───────────────────────────────────────────────
   'app.selectDocument':  { pl: 'Wybierz dokument z listy', en: 'Select a document from the list' },
 

@@ -1,5 +1,6 @@
 import type { Theme } from '../App'
 import type { Lang } from '../i18n'
+import type { ScaffoldInfo } from '../../../shared/types'
 import { useT } from '../i18n'
 
 interface SettingsProps {
@@ -10,6 +11,8 @@ interface SettingsProps {
   onThemeChange: (theme: Theme) => void
   lang: Lang
   onLangChange: (lang: Lang) => void
+  scaffoldInfo: ScaffoldInfo | null
+  onScaffoldInstall: () => void
 }
 
 const LANGS: { value: Lang; label: string }[] = [
@@ -17,7 +20,7 @@ const LANGS: { value: Lang; label: string }[] = [
   { value: 'pl', label: 'Polski' }
 ]
 
-export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChange, lang, onLangChange }: SettingsProps): JSX.Element {
+export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChange, lang, onLangChange, scaffoldInfo, onScaffoldInstall }: SettingsProps): JSX.Element {
   const t = useT()
 
   const THEMES: { value: Theme; label: string }[] = [
@@ -63,6 +66,33 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
             </svg>
             {currentPath ? t('settings.changeFolder') : t('settings.chooseFolder')}
           </button>
+
+          {currentPath && scaffoldInfo && scaffoldInfo.status !== 'current' && (
+            <div className={`scaffold-notice scaffold-notice--${scaffoldInfo.status}`}>
+              <div className="scaffold-notice-text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>
+                  {scaffoldInfo.status === 'missing'
+                    ? t('settings.scaffoldMissing')
+                    : t('settings.scaffoldOutdated')}
+                  {scaffoldInfo.status === 'outdated' && (
+                    <span className="scaffold-notice-version">
+                      {' '}v{scaffoldInfo.dirVersion ?? '?'} → v{scaffoldInfo.appVersion}
+                    </span>
+                  )}
+                </span>
+              </div>
+              <button className="scaffold-notice-btn" onClick={onScaffoldInstall}>
+                {scaffoldInfo.status === 'missing'
+                  ? t('settings.scaffoldCreate')
+                  : t('settings.scaffoldUpdate')}
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="settings-section">

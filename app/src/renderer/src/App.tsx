@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { TreeItem, NodeContent, TodoItem } from '../../shared/types'
+import type { TreeItem, NodeContent, TodoItem, ScaffoldInfo } from '../../shared/types'
 import { NavRail } from './components/NavRail'
 import { DepartmentList } from './components/DepartmentList'
 import { NodeDetail } from './components/NodeDetail'
@@ -26,6 +26,7 @@ export default function App(): JSX.Element {
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [scaffoldInfo, setScaffoldInfo] = useState<ScaffoldInfo | null>(null)
 
   // Resizable department list
   const [deptWidth, setDeptWidth] = useState(320)
@@ -92,6 +93,11 @@ export default function App(): JSX.Element {
     await window.api.setSetting('lang', newLang)
   }, [])
 
+  const checkScaffold = useCallback(
+    (path: string) => window.api.scaffoldStatus(path).then(setScaffoldInfo),
+    []
+  )
+
   const loadTree = useCallback(
     (path: string) => window.api.readTree(path).then(setTree),
     []
@@ -103,11 +109,20 @@ export default function App(): JSX.Element {
     })
   }, [])
 
+  const handleScaffoldInstall = useCallback(async () => {
+    if (!knowledgePath) return
+    await window.api.scaffoldInstall(knowledgePath)
+    await checkScaffold(knowledgePath)
+    loadTree(knowledgePath)
+    loadTodos(knowledgePath)
+  }, [knowledgePath, checkScaffold, loadTree, loadTodos])
+
   useEffect(() => {
     if (!knowledgePath) return
     loadTree(knowledgePath)
     loadTodos(knowledgePath)
-  }, [knowledgePath, loadTree, loadTodos])
+    checkScaffold(knowledgePath)
+  }, [knowledgePath, loadTree, loadTodos, checkScaffold])
 
   useEffect(() => {
     if (!knowledgePath) return
@@ -157,7 +172,7 @@ export default function App(): JSX.Element {
 
   const handlePathSet = useCallback((path: string) => {
     setKnowledgePath(path)
-    setActiveView('home')
+    setActiveView('settings')
     setOpenNode(null)
     setOpenNodeItem(null)
   }, [])
@@ -177,7 +192,7 @@ export default function App(): JSX.Element {
             <div className="loading-spinner" />
           </div>
         ) : !knowledgePath ? (
-          <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} lang={lang} onLangChange={handleLangChange} />
+          <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} lang={lang} onLangChange={handleLangChange} scaffoldInfo={null} onScaffoldInstall={handleScaffoldInstall} />
         ) : (
           <div className="app-body">
             <NavRail
@@ -200,6 +215,8 @@ export default function App(): JSX.Element {
                   onThemeChange={handleThemeChange}
                   lang={lang}
                   onLangChange={handleLangChange}
+                  scaffoldInfo={scaffoldInfo}
+                  onScaffoldInstall={handleScaffoldInstall}
                 />
               ) : activeView === 'todos' ? (
                 <TodoView todos={todos} knowledgePath={knowledgePath} />

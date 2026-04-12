@@ -1431,7 +1431,7 @@ ul { list-style: none; }
   border: 1px solid var(--border-soft);
   border-radius: 14px;
   padding: 40px 48px;
-  width: 460px;
+  width: 690px;
   box-shadow: var(--shadow-hover);
   display: flex;
   flex-direction: column;
@@ -1529,6 +1529,79 @@ ul { list-style: none; }
 }
 
 .settings-cancel:hover { color: var(--text-2); }
+
+/* ── Scaffold Notice ─────────────────────────────────── */
+
+.scaffold-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.scaffold-notice--missing {
+  background: rgba(234,179,8,.08);
+  border: 1px solid rgba(234,179,8,.25);
+  color: rgb(234,179,8);
+}
+
+.scaffold-notice--outdated {
+  background: rgba(249,115,22,.08);
+  border: 1px solid rgba(249,115,22,.25);
+  color: rgb(249,115,22);
+}
+
+.scaffold-notice-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.scaffold-notice-text svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.scaffold-notice-version {
+  opacity: .7;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11.5px;
+}
+
+.scaffold-notice-btn {
+  align-self: flex-start;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: background .15s, border-color .15s;
+}
+
+.scaffold-notice--missing .scaffold-notice-btn {
+  background: rgba(234,179,8,.12);
+  border: 1px solid rgba(234,179,8,.3);
+  color: rgb(234,179,8);
+}
+
+.scaffold-notice--missing .scaffold-notice-btn:hover {
+  background: rgba(234,179,8,.2);
+  border-color: rgba(234,179,8,.45);
+}
+
+.scaffold-notice--outdated .scaffold-notice-btn {
+  background: rgba(249,115,22,.12);
+  border: 1px solid rgba(249,115,22,.3);
+  color: rgb(249,115,22);
+}
+
+.scaffold-notice--outdated .scaffold-notice-btn:hover {
+  background: rgba(249,115,22,.2);
+  border-color: rgba(249,115,22,.45);
+}
 
 /* ═══════════════════════════════════════════════════════════
    Theme Picker

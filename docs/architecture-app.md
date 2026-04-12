@@ -86,6 +86,8 @@ All renderer ↔ main communication goes through `window.api` (defined in `prelo
 | `pty:destroy`          | invoke → handle | Kill active PTY                      |
 | `pty:data`             | main → renderer | PTY stdout data                      |
 | `pty:exit`             | main → renderer | PTY process exited                   |
+| `scaffold:status`      | invoke → handle | Check scaffold version status        |
+| `scaffold:install`     | invoke → handle | Install/update scaffold files        |
 | `watcher:change`       | main → renderer | File system change event             |
 
 ## Settings
@@ -140,11 +142,12 @@ Key state:
 - `activeView` — current view (`home | todos | graph | claude | settings`)
 - `openNode / openNodeItem` — currently viewed node
 - `theme`, `lang` — user preferences
+- `scaffoldInfo` — scaffold version status for the current knowledge dir
 - `sidebarCollapsed`, `deptWidth` — UI layout
 
 ## Data Flow
 
-1. On startup: load settings → if `knowledgePath` exists, load tree + todos
+1. On startup: load settings → if `knowledgePath` exists, load tree + todos + check scaffold status
 2. File watcher (Chokidar) detects changes → sends `watcher:change` to renderer
 3. Renderer reloads tree on `*.md` change / dir add / dir remove
 4. Renderer reloads todos on `todos.json` change
@@ -161,15 +164,26 @@ Key state:
 
 ## Wiki Scaffold
 
-`app/resources/wiki-scaffold/` contains template files auto-installed into any selected knowledge folder if missing:
+`app/resources/wiki-scaffold/` contains template files for knowledge base structure:
 
 - `CLAUDE.md` — instructions for Claude when working in the knowledge base
 - `_meta/graph.json` — knowledge graph data
 - `_meta/todos.json` — todos data
+- `_meta/scaffold-version.json` — scaffold version (integer, e.g. `{ "version": 1 }`)
 - `_templates/node.md` — template for new nodes
 - `knowledge/index.md` — root knowledge index
 
-Scaffold triggers: on `knowledgePath` set (both folder selection and app startup).
+Scaffold is **not auto-installed**. The app checks the scaffold status via `scaffold:status` and shows a notice in Settings when the scaffold is missing or outdated. The user must explicitly click to create/update.
+
+Scaffold status logic (`getScaffoldStatus` in `main/index.ts`):
+- No `_meta/scaffold-version.json` in knowledge dir + no scaffold dirs → `missing`
+- No version file but scaffold dirs exist, or version mismatch → `outdated` (shows dir version → app version)
+- Version matches → `current` (no notice shown)
+
+Install behavior:
+- `missing` → creates only files that don't exist
+- `outdated` → overwrites all scaffold files with current versions
+
 In production, scaffold files are bundled via `extraResources` in electron-builder config.
 
 ## Shared Types (`src/shared/types.ts`)
@@ -184,6 +198,7 @@ Key interfaces:
 - `GraphData` — nodes + edges
 - `NodeContent` — frontmatter + content (markdown body) + raw
 - `WatcherChange` — event + filePath
+- `ScaffoldInfo` — status (missing/outdated/current), appVersion, dirVersion
 
 ## I18n
 

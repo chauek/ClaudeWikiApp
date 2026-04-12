@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange } from '../shared/types'
+import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange, ScaffoldInfo } from '../shared/types'
 
 const api = {
   // Settings
@@ -31,6 +31,13 @@ const api = {
 
   openExternal: (url: string): Promise<void> =>
     ipcRenderer.invoke('shell:openExternal', url),
+
+  // Scaffold
+  scaffoldStatus: (knowledgePath: string): Promise<ScaffoldInfo> =>
+    ipcRenderer.invoke('scaffold:status', knowledgePath),
+
+  scaffoldInstall: (knowledgePath: string): Promise<boolean> =>
+    ipcRenderer.invoke('scaffold:install', knowledgePath),
 
   // Embedded terminal (PTY)
   ptyCreate: (knowledgePath: string): Promise<void> =>
