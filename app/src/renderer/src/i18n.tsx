@@ -46,6 +46,14 @@ const translations = {
   'todo.pendingShort':     { pl: 'oczekujących',                   en: 'pending' },
   'todo.activeTasks':      { pl: 'aktywnych zadań',                en: 'active tasks' },
 
+  // ── Todo priority & size ──────────────────────────────
+  'todo.priority.critical': { pl: 'Krytyczny',  en: 'Critical' },
+  'todo.priority.high':     { pl: 'Wysoki',     en: 'High'     },
+  'todo.priority.medium':   { pl: 'Średni',     en: 'Medium'   },
+  'todo.priority.low':      { pl: 'Niski',      en: 'Low'      },
+  'todo.priority.someday':  { pl: 'Kiedyś',     en: 'Someday'  },
+  'todo.size':              { pl: 'Rozmiar',    en: 'Size'     },
+
   // ── DepartmentList ────────────────────────────────────
   'dept.noDepartments':  { pl: 'Brak działów',   en: 'No departments' },
   'dept.documents':      { pl: 'dokumentów',      en: 'documents' },
