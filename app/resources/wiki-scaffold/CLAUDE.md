@@ -39,8 +39,12 @@ tags: [tag1, tag2]                                      # tags for filtering and
 todos:
   - text: "Task description"
     status: pending                                     # pending | in_progress | done
+    priority: medium                                    # critical | high | medium | low | someday
+    size: M                                             # S | M | L | XL
   - text: "Completed task"
     status: done
+    priority: low
+    size: S
 connections: ["knowledge/other-project/index"]          # paths to related nodes
 created: "YYYY-MM-DD"
 updated: "YYYY-MM-DD"
@@ -119,6 +123,8 @@ After every change to nodes, update `_meta/todos.json`.
       "id": "node-id--task-slug",
       "text": "Task description",
       "status": "pending",
+      "priority": "medium",
+      "size": "M",
       "nodePath": "knowledge/project/topic",
       "nodeTitle": "Topic Title",
       "tags": ["tag1", "tag2"]
@@ -147,6 +153,7 @@ Connect two nodes when:
 - **Always update** `_meta/graph.json` and `_meta/todos.json` after every change
 - Write node content in **English**
 - Ask the user when you don't know which project to assign knowledge to
+- **Always set `priority` and `size`** on every todo when creating or editing. If unsure, propose a value and briefly explain why. Defaults: `priority: medium`, `size: M`. Allowed values: priority = `critical | high | medium | low | someday`; size = `S | M | L | XL`
 
 ## Versioning — git commit after every change
 
