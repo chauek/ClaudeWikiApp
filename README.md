@@ -53,6 +53,34 @@ cd app
 npm run build
 ```
 
+## Releasing
+
+Releases are built automatically on GitHub Actions (macOS x64) and published as GitHub Releases with a DMG attached.
+
+### Create a release
+
+From the repo root:
+
+```bash
+./scripts/release.sh           # patch bump: 0.1.0 → 0.1.1
+./scripts/release.sh minor     # minor bump: 0.1.0 → 0.2.0
+./scripts/release.sh major     # major bump: 0.1.0 → 1.0.0
+```
+
+The script:
+1. Bumps the version in `app/package.json`
+2. Commits and creates a git tag (`v0.1.1`)
+3. Pushes the commit and tag to GitHub
+4. GitHub Actions picks up the tag, builds the DMG, and publishes the release
+
+The build takes ~15 minutes. Monitor progress at **Actions** tab on GitHub.
+
+### Notes
+
+- Builds are **unsigned** — on first launch macOS will show a Gatekeeper warning. Users need to right-click → Open to bypass it.
+- To enable code signing, add `CSC_LINK` and `CSC_KEY_PASSWORD` secrets to the repo (requires an Apple Developer account).
+- The workflow uses `macos-13` (Intel x64) runner. On Apple Silicon the app runs via Rosetta 2.
+
 ## Knowledge Base Structure
 
 The knowledge base is a regular folder with Markdown files. ClaudeWiki expects:

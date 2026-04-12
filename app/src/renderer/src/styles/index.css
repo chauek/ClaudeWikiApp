@@ -1419,11 +1419,23 @@ ul { list-style: none; }
 ═══════════════════════════════════════════════════════════ */
 
 .settings-screen {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 1;
   padding: 24px;
+}
+
+.settings-version {
+  position: absolute;
+  bottom: 14px;
+  left: 18px;
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
 }
 
 .settings-card {

@@ -39,6 +39,7 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
 
   return (
     <div className="settings-screen">
+      <span className="settings-version">v{__APP_VERSION__}</span>
       <div className="settings-card">
         <div className="settings-brand">
           <div className="settings-brand-icon">
