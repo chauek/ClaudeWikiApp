@@ -6,6 +6,7 @@
   "author": "Chauek",
   "private": true,
   "scripts": {
+    "postinstall": "electron-rebuild -f -w node-pty",
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
