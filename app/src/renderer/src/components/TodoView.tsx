@@ -7,6 +7,26 @@ interface TodoViewProps {
   knowledgePath: string
 }
 
+const PRIORITY_ORDER: Record<string, number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+  someday: 4,
+}
+
+const PRIORITY_COLOR: Record<string, { color: string; bg: string; border: string }> = {
+  critical: { color: '#ff6b6b', bg: 'rgba(255,107,107,0.15)', border: '#ff6b6b' },
+  high:     { color: '#ff9f43', bg: 'rgba(255,159,67,0.15)',  border: '#ff9f43' },
+  medium:   { color: '#f59e0a', bg: 'rgba(245,158,10,0.15)',  border: '#f59e0a' },
+  low:      { color: '#6bcb77', bg: 'rgba(107,203,119,0.15)', border: '#6bcb77' },
+  someday:  { color: '#585858', bg: 'rgba(88,88,88,0.18)',    border: '#2b2c2c' },
+}
+
+function priorityRank(p?: string): number {
+  return p !== undefined ? (PRIORITY_ORDER[p] ?? 2) : 2
+}
+
 const COLOR_CYCLE = [
   { color: '#c3c0ff', bg: 'rgba(195,192,255,0.12)' },  // primary
   { color: '#f59e0a', bg: 'rgba(245,158,10,0.12)' },   // secondary
@@ -25,7 +45,16 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
         map.set(todo.nodePath, { nodeTitle: todo.nodeTitle, nodePath: todo.nodePath, items: [todo] })
       }
     }
-    return Array.from(map.values())
+    // Sort items within each group by priority
+    for (const group of map.values()) {
+      group.items.sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))
+    }
+    // Sort groups by their highest-priority item
+    return Array.from(map.values()).sort((a, b) => {
+      const aTop = priorityRank(a.items[0]?.priority)
+      const bTop = priorityRank(b.items[0]?.priority)
+      return aTop - bTop
+    })
   }, [todos])
 
   const totalPending    = todos.filter(td => td.status === 'pending').length
@@ -141,15 +170,15 @@ function TodoGroup({
 }): JSX.Element {
   const t = useT()
   const [open, setOpen] = useState(defaultOpen)
+  const [openDropdown, setOpenDropdown] = useState<{ id: string; type: 'priority' | 'size' } | null>(null)
 
-  // Snapshot of all items ever seen — survives watcher-triggered prop updates
   const [seenItems, setSeenItems] = useState<Map<string, TodoItem>>(
     () => new Map(group.items.map(item => [item.id, item]))
   )
-  // Local status overrides (user clicks), separate from file state
   const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
+  const [priorityOverride, setPriorityOverride] = useState<Map<string, string>>(new Map())
+  const [sizeOverride, setSizeOverride] = useState<Map<string, string>>(new Map())
 
-  // Merge new items from props into seenItems (don't remove, just add/update non-overridden)
   useEffect(() => {
     setSeenItems(prev => {
       const next = new Map(prev)
@@ -158,6 +187,14 @@ function TodoGroup({
     })
   }, [group.items])
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openDropdown) return
+    const handler = (): void => setOpenDropdown(null)
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openDropdown])
+
   const handleToggle = (todo: TodoItem): void => {
     const current = statusOverride.get(todo.id) ?? todo.status
     const next: TodoItem['status'] = current === 'done' ? 'pending' : 'done'
@@ -165,12 +202,28 @@ function TodoGroup({
     window.api.writeTodoStatus(knowledgePath, todo.id, next)
   }
 
+  const handlePriority = (todo: TodoItem, priority: string): void => {
+    setPriorityOverride(prev => new Map(prev).set(todo.id, priority))
+    window.api.writeTodoPriority(knowledgePath, todo.id, priority)
+    setOpenDropdown(null)
+  }
+
+  const handleSize = (todo: TodoItem, size: string): void => {
+    setSizeOverride(prev => new Map(prev).set(todo.id, size))
+    window.api.writeTodoSize(knowledgePath, todo.id, size)
+    setOpenDropdown(null)
+  }
+
   const displayItems = useMemo(
-    () => [...seenItems.values()].map(item => ({
-      ...item,
-      status: (statusOverride.get(item.id) ?? item.status) as TodoItem['status']
-    })),
-    [seenItems, statusOverride]
+    () => [...seenItems.values()]
+      .map(item => ({
+        ...item,
+        status: (statusOverride.get(item.id) ?? item.status) as TodoItem['status'],
+        priority: (priorityOverride.get(item.id) ?? item.priority) as TodoItem['priority'],
+        size: (sizeOverride.get(item.id) ?? item.size) as TodoItem['size'],
+      }))
+      .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)),
+    [seenItems, statusOverride, priorityOverride, sizeOverride]
   )
 
   const pendingCount  = displayItems.filter(ti => ti.status === 'pending').length
@@ -203,16 +256,25 @@ function TodoGroup({
         <div className="tg-items">
           {displayItems.map(todo => {
             const done = todo.status === 'done'
+            const pc = todo.priority ? PRIORITY_COLOR[todo.priority] : null
+            const borderColor = pc ? pc.border : 'transparent'
+            const isOpenPriority = openDropdown?.id === todo.id && openDropdown.type === 'priority'
+            const isOpenSize = openDropdown?.id === todo.id && openDropdown.type === 'size'
+
             return (
               <div
                 key={todo.id}
                 className={`tg-item${done ? ' tg-item--done' : ` tg-item--${todo.status}`}`}
-                onClick={() => handleToggle(todo)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
+                style={{ borderLeft: `3px solid ${borderColor}`, position: 'relative' }}
               >
-                <span className="tg-item-check" style={{ color: done ? 'var(--text-3)' : accentColor.color }}>
+                <span
+                  className="tg-item-check"
+                  style={{ color: done ? 'var(--text-3)' : accentColor.color }}
+                  onClick={() => handleToggle(todo)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
+                >
                   {done
                     ? <IconCheckDone />
                     : todo.status === 'in_progress'
@@ -220,11 +282,71 @@ function TodoGroup({
                       : <IconCheckEmpty />
                   }
                 </span>
-                <span className={`tg-item-text${done ? ' tg-item-text--done' : todo.status === 'in_progress' ? ' tg-item-text--progress' : ''}`}>
+                <span
+                  className={`tg-item-text${done ? ' tg-item-text--done' : todo.status === 'in_progress' ? ' tg-item-text--progress' : ''}`}
+                  onClick={() => handleToggle(todo)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
+                  style={{ flex: 1, cursor: 'pointer' }}
+                >
                   {todo.text}
                 </span>
                 {!done && todo.status === 'in_progress' && (
                   <span className="tg-item-badge">{t('todo.inProgressShort')}</span>
+                )}
+
+                {/* Priority badge */}
+                {!done && todo.priority && pc && (
+                  <span style={{ position: 'relative' }}>
+                    <span
+                      className="tg-priority-badge"
+                      style={{ background: pc.bg, color: pc.color, cursor: 'pointer' }}
+                      onMouseDown={e => { e.stopPropagation(); setOpenDropdown(isOpenPriority ? null : { id: todo.id, type: 'priority' }) }}
+                    >
+                      {t(`todo.priority.${todo.priority}` as Parameters<ReturnType<typeof useT>>[0])}
+                    </span>
+                    {isOpenPriority && (
+                      <div className="tg-dropdown" onMouseDown={e => e.stopPropagation()}>
+                        {(['critical', 'high', 'medium', 'low', 'someday'] as const).map(p => (
+                          <div
+                            key={p}
+                            className={`tg-dropdown-item${todo.priority === p ? ' tg-dropdown-item--active' : ''}`}
+                            onMouseDown={() => handlePriority(todo, p)}
+                          >
+                            <span className="tg-dropdown-dot" style={{ background: PRIORITY_COLOR[p].color }} />
+                            {t(`todo.priority.${p}` as Parameters<ReturnType<typeof useT>>[0])}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </span>
+                )}
+
+                {/* Size badge */}
+                {!done && (
+                  <span style={{ position: 'relative' }}>
+                    <span
+                      className="tg-size-badge"
+                      style={{ cursor: 'pointer' }}
+                      onMouseDown={e => { e.stopPropagation(); setOpenDropdown(isOpenSize ? null : { id: todo.id, type: 'size' }) }}
+                    >
+                      {todo.size ?? '·'}
+                    </span>
+                    {isOpenSize && (
+                      <div className="tg-dropdown tg-dropdown--size" onMouseDown={e => e.stopPropagation()}>
+                        {(['S', 'M', 'L', 'XL'] as const).map(s => (
+                          <div
+                            key={s}
+                            className={`tg-dropdown-size-item${todo.size === s ? ' tg-dropdown-size-item--active' : ''}`}
+                            onMouseDown={() => handleSize(todo, s)}
+                          >
+                            {s}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </span>
                 )}
               </div>
             )

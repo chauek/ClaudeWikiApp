@@ -1263,6 +1263,91 @@ ul { list-style: none; }
   letter-spacing: .04em;
 }
 
+.tg-priority-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.tg-size-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface-3);
+  border-radius: 4px;
+  padding: 2px 6px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.tg-dropdown {
+  position: absolute;
+  z-index: 200;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--surface-4);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  min-width: 120px;
+}
+
+.tg-dropdown--size {
+  min-width: unset;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+}
+
+.tg-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tg-dropdown-item:hover,
+.tg-dropdown-item--active {
+  background: var(--surface-3);
+}
+
+.tg-dropdown-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tg-dropdown-size-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 32px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.tg-dropdown-size-item:hover,
+.tg-dropdown-size-item--active {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
 /* ─── Empty state ─────────────────────────────────────── */
 
 .todo-view-empty {
