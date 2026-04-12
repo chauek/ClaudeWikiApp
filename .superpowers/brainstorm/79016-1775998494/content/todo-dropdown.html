@@ -1,0 +1,189 @@
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; font-size: 13px; }
+
+  .demo-app {
+    background: #121212; border-radius: 12px; overflow: visible;
+    border: 1px solid #2b2c2c; max-width: 480px; margin: 0 auto; position: relative;
+  }
+  .demo-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+  .bc-item {
+    display: flex; align-items: center; gap: 9px;
+    background: #1f2020; border-radius: 8px;
+    padding: 9px 12px; border-left: 3px solid transparent;
+    position: relative;
+  }
+  .bc-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #585858; flex-shrink: 0; }
+  .bc-text { flex: 1; color: #e7e5e5; font-size: 13px; }
+  .bc-pbadge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 4px; padding: 2px 6px; flex-shrink: 0; cursor: pointer;
+    transition: opacity 0.15s; position: relative;
+  }
+  .bc-pbadge:hover { opacity: 0.8; }
+  .bc-size {
+    font-size: 10px; font-weight: 600; color: #acabab;
+    background: #252626; border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .bc-size:hover { background: #2b2c2c; }
+
+  .border-critical { border-left-color: #ff6b6b; }
+  .border-high     { border-left-color: #ff9f43; }
+  .border-medium   { border-left-color: #f59e0a; }
+
+  .bg-critical { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .bg-high     { background: rgba(255,159,67,0.15);  color: #ff9f43; }
+  .bg-medium   { background: rgba(245,158,10,0.15);  color: #f59e0a; }
+  .bg-low      { background: rgba(107,203,119,0.15); color: #6bcb77; }
+  .bg-someday  { background: rgba(88,88,88,0.18);    color: #585858; }
+
+  /* ── Dropdown ── */
+  .dd {
+    position: absolute; z-index: 100;
+    background: #1f2020; border: 1px solid #2b2c2c;
+    border-radius: 8px; padding: 4px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    min-width: 130px;
+  }
+  .dd-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 5px; cursor: pointer;
+    transition: background 0.1s; font-size: 12px;
+  }
+  .dd-item:hover { background: #252626; }
+  .dd-item.active { background: #252626; }
+  .dd-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dd-label { color: #e7e5e5; }
+  .dd-check { margin-left: auto; color: #c3c0ff; font-size: 11px; }
+
+  .dd-size-item {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 32px; border-radius: 5px; cursor: pointer;
+    font-size: 11px; font-weight: 700; color: #acabab;
+    transition: background 0.1s;
+  }
+  .dd-size-item:hover { background: #252626; color: #e7e5e5; }
+  .dd-size-item.active { background: #c3c0ff22; color: #c3c0ff; }
+  .dd-size-row { display: flex; gap: 2px; padding: 4px; }
+
+  .scenario-label {
+    font-size: 11px; font-weight: 600; color: #acabab;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0 4px 8px;
+  }
+</style>
+
+<h2>Dropdown — jak działa edycja z UI</h2>
+<p class="subtitle">Kliknięcie badge otwiera mini-dropdown. Dwie opcje jak go zamknąć po wyborze.</p>
+
+<div class="cards">
+
+  <!-- OPTION A: separate dropdowns -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 20px 16px 28px; background: #0d0d0d; border-radius: 8px 8px 0 0; min-height: 220px;">
+      <div class="scenario-label">Klik badge priorytetu</div>
+      <div class="demo-app">
+        <div class="demo-list">
+          <div class="bc-item border-high" style="z-index:10">
+            <div class="bc-check"></div>
+            <span class="bc-text">Sprawdzić poziom oleju</span>
+            <span class="bc-pbadge bg-high" style="box-shadow:0 0 0 2px #ff9f43">High</span>
+            <span class="bc-size">S</span>
+            <!-- dropdown -->
+            <div class="dd" style="top: 32px; right: 48px;">
+              <div class="dd-item"><div class="dd-dot" style="background:#ff6b6b"></div><span class="dd-label">Critical</span></div>
+              <div class="dd-item active"><div class="dd-dot" style="background:#ff9f43"></div><span class="dd-label">High</span><span class="dd-check">✓</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#f59e0a"></div><span class="dd-label">Medium</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#6bcb77"></div><span class="dd-label">Low</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#585858"></div><span class="dd-label">Someday</span></div>
+            </div>
+          </div>
+          <div class="bc-item border-critical" style="opacity:0.4">
+            <div class="bc-check"></div>
+            <span class="bc-text">Wymienić opony zimowe</span>
+            <span class="bc-pbadge bg-critical">Critical</span>
+            <span class="bc-size">M</span>
+          </div>
+          <div class="bc-item border-medium" style="opacity:0.4">
+            <div class="bc-check"></div>
+            <span class="bc-text">Umówić przegląd</span>
+            <span class="bc-pbadge bg-medium">Medium</span>
+            <span class="bc-size">L</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px">
+      <div class="scenario-label">Klik badge rozmiaru</div>
+      <div class="demo-app">
+        <div class="demo-list">
+          <div class="bc-item border-critical" style="z-index:10">
+            <div class="bc-check"></div>
+            <span class="bc-text">Wymienić opony zimowe</span>
+            <span class="bc-pbadge bg-critical">Critical</span>
+            <span class="bc-size" style="box-shadow:0 0 0 2px #c3c0ff;color:#c3c0ff">M</span>
+            <div class="dd" style="top: 32px; right: 0px;">
+              <div class="dd-size-row">
+                <div class="dd-size-item">S</div>
+                <div class="dd-size-item active">M</div>
+                <div class="dd-size-item">L</div>
+                <div class="dd-size-item">XL</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Dwa osobne dropdowny</h3>
+      <p>Klik badge priorytetu = lista 5 opcji. Klik badge rozmiaru = rząd S/M/L/XL. Proste, każdy badge robi jedno.</p>
+    </div>
+  </div>
+
+  <!-- OPTION B: combined popover -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 20px 16px 28px; background: #0d0d0d; border-radius: 8px 8px 0 0; min-height: 220px;">
+      <div class="scenario-label">Klik na dowolny badge → jeden popover</div>
+      <div class="demo-app">
+        <div class="demo-list">
+          <div class="bc-item border-high" style="z-index:10">
+            <div class="bc-check"></div>
+            <span class="bc-text">Sprawdzić poziom oleju</span>
+            <span class="bc-pbadge bg-high">High</span>
+            <span class="bc-size">S</span>
+            <!-- combined popover -->
+            <div class="dd" style="top: 32px; right: 0px; min-width: 160px;">
+              <div style="padding: 6px 10px 4px; font-size: 10px; color: #585858; letter-spacing:0.06em; text-transform:uppercase; font-weight:600;">Priority</div>
+              <div class="dd-item"><div class="dd-dot" style="background:#ff6b6b"></div><span class="dd-label">Critical</span></div>
+              <div class="dd-item active"><div class="dd-dot" style="background:#ff9f43"></div><span class="dd-label">High</span><span class="dd-check">✓</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#f59e0a"></div><span class="dd-label">Medium</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#6bcb77"></div><span class="dd-label">Low</span></div>
+              <div class="dd-item"><div class="dd-dot" style="background:#585858"></div><span class="dd-label">Someday</span></div>
+              <div style="height:1px;background:#2b2c2c;margin:4px 0"></div>
+              <div style="padding: 4px 10px 2px; font-size: 10px; color: #585858; letter-spacing:0.06em; text-transform:uppercase; font-weight:600;">Size</div>
+              <div class="dd-size-row">
+                <div class="dd-size-item active">S</div>
+                <div class="dd-size-item">M</div>
+                <div class="dd-size-item">L</div>
+                <div class="dd-size-item">XL</div>
+              </div>
+            </div>
+          </div>
+          <div class="bc-item border-critical" style="opacity:0.35">
+            <div class="bc-check"></div>
+            <span class="bc-text">Wymienić opony zimowe</span>
+            <span class="bc-pbadge bg-critical">Critical</span>
+            <span class="bc-size">M</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Jeden popover (priority + size)</h3>
+      <p>Klik gdziekolwiek na badge otwiera jeden panel z oboma polami. Mniej kliknięć gdy zmieniasz oba naraz.</p>
+    </div>
+  </div>
+
+</div>

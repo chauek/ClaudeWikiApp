@@ -1,0 +1,123 @@
+<style>
+  .demo-app {
+    background: #121212; border-radius: 12px; overflow: hidden;
+    border: 1px solid #2b2c2c;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    font-size: 13px;
+    max-width: 480px; margin: 0 auto;
+  }
+  .demo-header {
+    background: #131313; padding: 10px 16px;
+    font-size: 11px; color: #585858; border-bottom: 1px solid #1f2020;
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .demo-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+  .bc-item {
+    display: flex; align-items: center; gap: 9px;
+    background: #1f2020; border-radius: 8px;
+    padding: 9px 12px;
+    border-left: 3px solid transparent;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .bc-item:hover { background: #252626; }
+  .bc-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #585858; flex-shrink: 0; }
+  .bc-check.done { background: #c3c0ff; border-color: #c3c0ff; display:flex;align-items:center;justify-content:center; }
+  .bc-text { flex: 1; color: #e7e5e5; font-size: 13px; }
+  .bc-text.done { color: #585858; text-decoration: line-through; }
+  .bc-pbadge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase; border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+  }
+  .bc-size {
+    font-size: 10px; font-weight: 600; color: #acabab;
+    background: #252626; border-radius: 4px; padding: 2px 6px; flex-shrink: 0;
+  }
+
+  .border-critical { border-left-color: #ff6b6b !important; }
+  .border-high     { border-left-color: #ff9f43 !important; }
+  .border-medium   { border-left-color: #f59e0a !important; }
+  .border-low      { border-left-color: #6bcb77 !important; }
+  .border-someday  { border-left-color: #2b2c2c !important; }
+
+  .bg-critical { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .bg-high     { background: rgba(255,159,67,0.15);  color: #ff9f43; }
+  .bg-medium   { background: rgba(245,158,10,0.15);  color: #f59e0a; }
+  .bg-low      { background: rgba(107,203,119,0.15); color: #6bcb77; }
+  .bg-someday  { background: rgba(88,88,88,0.18);    color: #585858; }
+</style>
+
+<h2>Wariant B+C — border + kolorowy badge</h2>
+<p class="subtitle">Lewy border = szybki skan priorytetu. Badge z etykietą = czytelna etykieta. Size chip po prawej.</p>
+
+<div class="mockup">
+  <div class="mockup-header">TodoView — Projekty / Samochód</div>
+  <div class="mockup-body" style="padding:0">
+    <div class="demo-app" style="border-radius:0;border:none;max-width:100%">
+      <div class="demo-list">
+
+        <div class="bc-item border-critical">
+          <div class="bc-check"></div>
+          <span class="bc-text">Wymienić opony zimowe</span>
+          <span class="bc-pbadge bg-critical">Critical</span>
+          <span class="bc-size">M</span>
+        </div>
+
+        <div class="bc-item border-high">
+          <div class="bc-check"></div>
+          <span class="bc-text">Sprawdzić poziom oleju</span>
+          <span class="bc-pbadge bg-high">High</span>
+          <span class="bc-size">S</span>
+        </div>
+
+        <div class="bc-item border-medium">
+          <div class="bc-check"></div>
+          <span class="bc-text">Umówić przegląd techniczny na wiosnę</span>
+          <span class="bc-pbadge bg-medium">Medium</span>
+          <span class="bc-size">L</span>
+        </div>
+
+        <div class="bc-item border-low">
+          <div class="bc-check"></div>
+          <span class="bc-text">Sprawdzić ciśnienie w oponach</span>
+          <span class="bc-pbadge bg-low">Low</span>
+          <span class="bc-size">S</span>
+        </div>
+
+        <div class="bc-item border-someday">
+          <div class="bc-check"></div>
+          <span class="bc-text">Polakierować felgi aluminiowe</span>
+          <span class="bc-pbadge bg-someday">Someday</span>
+          <span class="bc-size">XL</span>
+        </div>
+
+        <div class="bc-item border-someday" style="opacity:0.38">
+          <div class="bc-check done">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="bc-text done">Dokupić dywaniki do bagażnika</span>
+          <span class="bc-pbadge bg-someday">Low</span>
+          <span class="bc-size">S</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top:28px;">
+  <p class="label">Jeszcze dwa szczegóły do rozstrzygnięcia</p>
+  <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+
+    <div style="background:#1a1a1a;border-radius:8px;padding:14px 16px;">
+      <div style="color:#e7e5e5;font-size:13px;font-weight:500;margin-bottom:4px;">1. Sortowanie listy</div>
+      <div style="color:#acabab;font-size:12px;">Czy critical/high mają być automatycznie na górze, czy zachować kolejność jak w pliku?</div>
+    </div>
+
+    <div style="background:#1a1a1a;border-radius:8px;padding:14px 16px;">
+      <div style="color:#e7e5e5;font-size:13px;font-weight:500;margin-bottom:4px;">2. Edycja z UI</div>
+      <div style="color:#acabab;font-size:12px;">Priority i size tylko przez Claude w terminalu, czy też klikalne w apce (np. dropdown po kliknięciu badge)?</div>
+    </div>
+
+  </div>
+</div>

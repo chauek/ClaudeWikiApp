@@ -25,6 +25,10 @@ The app auto-installs these files into any selected knowledge folder if they're 
 If the data structure changes (new frontmatter field, graph.json schema change, etc.),
 update **only** `app/resources/wiki-scaffold/CLAUDE.md`. The app will propagate it to new folders.
 
+**Every change to any file in `app/resources/wiki-scaffold/` requires bumping the version in
+`app/resources/wiki-scaffold/_meta/scaffold-version.json`** (integer, increment by 1).
+This triggers the "outdated" notice in Settings, prompting users to update their knowledge base.
+
 ## Desktop Application Architecture
 
 A detailed description of the Electron app architecture is in `docs/architecture-app.md`.

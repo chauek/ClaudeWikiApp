@@ -1,0 +1,262 @@
+<style>
+  .demo-wrap {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+    font-size: 13px;
+  }
+  .demo-app {
+    background: #121212;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #2b2c2c;
+  }
+  .demo-header {
+    background: #131313;
+    padding: 10px 16px;
+    font-size: 11px;
+    color: #585858;
+    border-bottom: 1px solid #1f2020;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .demo-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+  /* ── OPTION A: Dot + labels inline ── */
+  .a-item {
+    display: flex; align-items: center; gap: 8px;
+    background: #1f2020; border-radius: 8px;
+    padding: 9px 12px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .a-item:hover { background: #252626; }
+  .a-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #585858; flex-shrink: 0; }
+  .a-check.done { background: #c3c0ff; border-color: #c3c0ff; display: flex; align-items: center; justify-content: center; }
+  .a-text { flex: 1; color: #e7e5e5; font-size: 13px; }
+  .a-text.done { color: #585858; text-decoration: line-through; }
+  .a-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .a-plabel { font-size: 10px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+  .a-size { font-size: 10px; font-weight: 600; color: #585858; background: #252626; border-radius: 4px; padding: 1px 5px; letter-spacing: 0.04em; }
+
+  /* ── OPTION B: Left accent border ── */
+  .b-item {
+    display: flex; align-items: center; gap: 10px;
+    background: #1f2020; border-radius: 8px;
+    padding: 9px 12px;
+    border-left: 3px solid transparent;
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .b-item:hover { background: #252626; }
+  .b-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #585858; flex-shrink: 0; }
+  .b-check.done { background: #c3c0ff; border-color: #c3c0ff; }
+  .b-text { flex: 1; color: #e7e5e5; font-size: 13px; }
+  .b-text.done { color: #585858; text-decoration: line-through; }
+  .b-size { font-size: 10px; font-weight: 600; color: #acabab; background: #252626; border-radius: 4px; padding: 1px 5px; letter-spacing: 0.04em; }
+  .b-plabel { font-size: 10px; color: #585858; }
+
+  /* ── OPTION C: Full badges ── */
+  .c-item {
+    display: flex; align-items: center; gap: 8px;
+    background: #1f2020; border-radius: 8px;
+    padding: 9px 12px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .c-item:hover { background: #252626; }
+  .c-check { width: 16px; height: 16px; border-radius: 3px; border: 2px solid #585858; flex-shrink: 0; }
+  .c-check.done { background: #c3c0ff; border-color: #c3c0ff; }
+  .c-text { flex: 1; color: #e7e5e5; font-size: 13px; }
+  .c-text.done { color: #585858; text-decoration: line-through; }
+  .c-pbadge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+    border-radius: 4px; padding: 2px 6px;
+  }
+  .c-size { font-size: 10px; font-weight: 600; color: #acabab; background: #252626; border-radius: 4px; padding: 2px 6px; }
+
+  /* priority colors */
+  .p-critical { color: #ff6b6b; }
+  .p-high     { color: #ff9f43; }
+  .p-medium   { color: #f59e0a; }
+  .p-low      { color: #6bcb77; }
+  .p-someday  { color: #585858; }
+
+  .bg-critical { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+  .bg-high     { background: rgba(255,159,67,0.15);  color: #ff9f43; }
+  .bg-medium   { background: rgba(245,158,10,0.15);  color: #f59e0a; }
+  .bg-low      { background: rgba(107,203,119,0.15); color: #6bcb77; }
+  .bg-someday  { background: rgba(88,88,88,0.2);     color: #585858; }
+
+  .border-critical { border-left-color: #ff6b6b !important; }
+  .border-high     { border-left-color: #ff9f43 !important; }
+  .border-medium   { border-left-color: #f59e0a !important; }
+  .border-low      { border-left-color: #6bcb77 !important; }
+  .border-someday  { border-left-color: #2b2c2c !important; }
+
+  .option-label {
+    font-size: 11px; font-weight: 600; color: #acabab;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 4px 4px 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .option-label span { flex: 1; }
+  .option-label .badge { font-size: 10px; background: #1f2020; border-radius: 4px; padding: 2px 7px; color: #585858; text-transform: none; letter-spacing: 0; font-weight: 400; }
+
+  .group-header {
+    display: flex; align-items: center; gap: 8px;
+    background: #1a1a1a; border-radius: 8px 8px 0 0;
+    padding: 9px 12px; margin-bottom: 1px;
+  }
+  .group-icon { width: 28px; height: 28px; background: rgba(195,192,255,0.12); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .group-title { color: #e7e5e5; font-weight: 500; font-size: 13px; }
+  .group-sub { color: #585858; font-size: 11px; }
+</style>
+
+<h2>Priority + Size — opcje wizualne dla TodoView</h2>
+<p class="subtitle">3 podejścia do wyświetlania priority i t-shirt size w listach zadań</p>
+
+<div class="cards">
+
+  <!-- OPTION A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #0d0d0d; border-radius: 8px 8px 0 0;">
+      <div class="demo-app">
+        <div class="demo-header">Projekty / Samochód</div>
+        <div class="demo-list">
+          <div class="a-item">
+            <div class="a-check"></div>
+            <div class="a-dot p-critical" style="background:#ff6b6b"></div>
+            <span class="a-plabel p-critical">Critical</span>
+            <span class="a-text">Wymienić opony zimowe</span>
+            <span class="a-size">M</span>
+          </div>
+          <div class="a-item">
+            <div class="a-check"></div>
+            <div class="a-dot" style="background:#ff9f43"></div>
+            <span class="a-plabel p-high">High</span>
+            <span class="a-text">Sprawdzić poziom oleju</span>
+            <span class="a-size">S</span>
+          </div>
+          <div class="a-item">
+            <div class="a-check"></div>
+            <div class="a-dot" style="background:#f59e0a"></div>
+            <span class="a-plabel p-medium">Medium</span>
+            <span class="a-text">Umówić przegląd techniczny</span>
+            <span class="a-size">L</span>
+          </div>
+          <div class="a-item">
+            <div class="a-check"></div>
+            <div class="a-dot" style="background:#585858"></div>
+            <span class="a-plabel p-someday">Someday</span>
+            <span class="a-text">Polakierować felgi</span>
+            <span class="a-size">XL</span>
+          </div>
+          <div class="a-item" style="opacity:0.4">
+            <div class="a-check done"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="a-dot" style="background:#585858"></div>
+            <span class="a-plabel p-someday" style="color:#585858">Low</span>
+            <span class="a-text done">Dokupić dywaniki</span>
+            <span class="a-size">S</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Dot + Label inline</h3>
+      <p>Kolorowa kropka + etykieta priorytetu przed tekstem. Size chip po prawej. Dużo informacji, czytelne skanowanie.</p>
+    </div>
+  </div>
+
+  <!-- OPTION B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #0d0d0d; border-radius: 8px 8px 0 0;">
+      <div class="demo-app">
+        <div class="demo-header">Projekty / Samochód</div>
+        <div class="demo-list">
+          <div class="b-item border-critical">
+            <div class="b-check"></div>
+            <span class="b-text">Wymienić opony zimowe</span>
+            <span class="b-size">M</span>
+          </div>
+          <div class="b-item border-high">
+            <div class="b-check"></div>
+            <span class="b-text">Sprawdzić poziom oleju</span>
+            <span class="b-size">S</span>
+          </div>
+          <div class="b-item border-medium">
+            <div class="b-check"></div>
+            <span class="b-text">Umówić przegląd techniczny</span>
+            <span class="b-size">L</span>
+          </div>
+          <div class="b-item border-someday">
+            <div class="b-check"></div>
+            <span class="b-text">Polakierować felgi</span>
+            <span class="b-size">XL</span>
+          </div>
+          <div class="b-item border-someday" style="opacity:0.4">
+            <div class="b-check done"></div>
+            <span class="b-text done">Dokupić dywaniki</span>
+            <span class="b-size">S</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Left border accent</h3>
+      <p>Kolorowy lewy border = priorytet. Size chip po prawej. Minimalny, nie zajmuje miejsca. Priorytet widoczny peryferyjnie.</p>
+    </div>
+  </div>
+
+  <!-- OPTION C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 16px; background: #0d0d0d; border-radius: 8px 8px 0 0;">
+      <div class="demo-app">
+        <div class="demo-header">Projekty / Samochód</div>
+        <div class="demo-list">
+          <div class="c-item">
+            <div class="c-check"></div>
+            <span class="c-text">Wymienić opony zimowe</span>
+            <span class="c-pbadge bg-critical">Critical</span>
+            <span class="c-size">M</span>
+          </div>
+          <div class="c-item">
+            <div class="c-check"></div>
+            <span class="c-text">Sprawdzić poziom oleju</span>
+            <span class="c-pbadge bg-high">High</span>
+            <span class="c-size">S</span>
+          </div>
+          <div class="c-item">
+            <div class="c-check"></div>
+            <span class="c-text">Umówić przegląd techniczny</span>
+            <span class="c-pbadge bg-medium">Medium</span>
+            <span class="c-size">L</span>
+          </div>
+          <div class="c-item">
+            <div class="c-check"></div>
+            <span class="c-text">Polakierować felgi</span>
+            <span class="c-pbadge bg-someday">Someday</span>
+            <span class="c-size">XL</span>
+          </div>
+          <div class="c-item" style="opacity:0.4">
+            <div class="c-check done"></div>
+            <span class="c-text done">Dokupić dywaniki</span>
+            <span class="c-pbadge bg-someday">Low</span>
+            <span class="c-size">S</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Pełne kolorowe badge'e</h3>
+      <p>Zabarwiony badge z etykietą po tekście zadania. Size chip obok. Najbardziej wyraźne, zajmuje więcej miejsca w wierszu.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <p class="label">Paleta kolorów priorytetów (wspólna dla wszystkich opcji)</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+    <span style="background:rgba(255,107,107,0.15);color:#ff6b6b;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">● Critical</span>
+    <span style="background:rgba(255,159,67,0.15);color:#ff9f43;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">● High</span>
+    <span style="background:rgba(245,158,10,0.15);color:#f59e0a;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">● Medium</span>
+    <span style="background:rgba(107,203,119,0.15);color:#6bcb77;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">● Low</span>
+    <span style="background:rgba(88,88,88,0.2);color:#585858;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600;">● Someday</span>
+  </div>
+</div>
