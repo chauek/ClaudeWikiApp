@@ -1,6 +1,6 @@
 {
   "name": "claudewiki",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Personal knowledge base viewer",
   "main": "./out/main/index.js",
   "author": "Chauek",
@@ -23,7 +23,9 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "category": "public.app-category.productivity"
