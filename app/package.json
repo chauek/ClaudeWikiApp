@@ -22,7 +22,8 @@
     "mac": {
       "target": [
         {
-          "target": "dmg"
+          "target": "dmg",
+          "arch": ["x64"]
         }
       ],
       "category": "public.app-category.productivity"
