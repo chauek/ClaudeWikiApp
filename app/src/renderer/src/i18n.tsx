@@ -53,6 +53,8 @@ const translations = {
   'todo.priority.low':      { pl: 'Niski',      en: 'Low'      },
   'todo.priority.someday':  { pl: 'Kiedyś',     en: 'Someday'  },
   'todo.size':              { pl: 'Rozmiar',    en: 'Size'     },
+  'todo.viewBySection':     { pl: 'Wg sekcji',  en: 'By section'  },
+  'todo.viewByPriority':    { pl: 'Wg priorytetu', en: 'By priority' },
 
   // ── DepartmentList ────────────────────────────────────
   'dept.noDepartments':  { pl: 'Brak działów',   en: 'No departments' },
