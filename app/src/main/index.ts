@@ -304,22 +304,28 @@ function scaffoldKnowledgeFolder(knowledgePath: string, overwrite: boolean = fal
   const scaffold = getScaffoldPath()
   if (!existsSync(scaffold)) return
 
-  const filesToCopy: [string, string[]][] = [
-    ['CLAUDE.md', []],
+  // These files contain user data — never overwrite, only create if missing
+  const dataFiles: [string, string[]][] = [
     [join('_meta', 'graph.json'), ['_meta']],
     [join('_meta', 'todos.json'), ['_meta']],
+  ]
+
+  // These files are scaffold templates — overwrite when updating
+  const templateFiles: [string, string[]][] = [
+    ['CLAUDE.md', []],
     [join('_meta', 'scaffold-version.json'), ['_meta']],
     [join('_templates', 'node.md'), ['_templates']],
     [join('knowledge', 'index.md'), ['knowledge']]
   ]
 
-  for (const [file, dirs] of filesToCopy) {
+  for (const [file, dirs] of [...dataFiles, ...templateFiles]) {
     for (const dir of dirs) {
       const dirPath = join(knowledgePath, dir)
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true })
     }
     const dest = join(knowledgePath, file)
-    if (!existsSync(dest) || overwrite) {
+    const isDataFile = dataFiles.some(([f]) => f === file)
+    if (!existsSync(dest) || (overwrite && !isDataFile)) {
       copyFileSync(join(scaffold, file), dest)
     }
   }
