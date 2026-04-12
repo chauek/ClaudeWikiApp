@@ -29,8 +29,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: app/package-lock.json
 
-      - name: Install Python setuptools (required by node-gyp on Python 3.12+)
-        run: pip install setuptools
+      - name: Setup Python 3.11 (node-gyp requires distutils, removed in 3.12)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
       - name: Determine version
         id: version
