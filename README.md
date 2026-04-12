@@ -77,10 +77,14 @@ The build takes ~15 minutes. Monitor progress at **Actions** tab on GitHub.
 
 ### Notes
 
-- Builds are **unsigned** — on first launch macOS will show a Gatekeeper warning. Users need to right-click → Open to bypass it.
-- To enable code signing, add `CSC_LINK` and `CSC_KEY_PASSWORD` secrets to the repo (requires an Apple Developer account).
+- Without signing secrets the release is published as a **pre-release** with an unsigned DMG. On first launch macOS Gatekeeper will warn — right-click `ClaudeWiki.app` → **Open** to bypass.
+- To enable code signing and notarization, add the following secrets to the repo (requires Apple Developer Program membership):
+  - `DEVELOPER_ID_CERT_P12_BASE64` — base64-encoded Developer ID Application certificate (.p12)
+  - `DEVELOPER_ID_CERT_PASSWORD` — password for the .p12
+  - `DEVELOPER_ID_APPLICATION` — full identity string, e.g. `Developer ID Application: Jan Kowalski (ABCD123456)`
+  - `APPLE_ID`, `APPLE_TEAM_ID`, `APPLE_APP_PASSWORD` — for notarization
 - The workflow uses `macos-14` (Apple Silicon arm64) runner. On Intel Macs the app runs via Rosetta 2.
-- CI build scripts live in `scripts/release/` — separate steps for build, sign, notarize, DMG (mirrors the pattern from other projects).
+- CI build scripts live in `scripts/release/` — separate steps for build, sign, notarize, DMG.
 
 ## Knowledge Base Structure
 
