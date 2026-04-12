@@ -18,7 +18,7 @@ echo "==> Compiling (electron-vite)"
 npx electron-vite build
 
 echo "==> Packaging ClaudeWiki.app (no sign, no DMG)"
-npx electron-builder --mac --dir --arch=arm64
+npx electron-builder --mac --dir --arm64
 
 APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac-arm64/ClaudeWiki.app"
 if [[ ! -d "$APP_BUNDLE" ]]; then
