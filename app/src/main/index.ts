@@ -136,6 +136,72 @@ ipcMain.handle('fs:readGraph', (_event, knowledgePath: string): GraphData | null
   }
 })
 
+ipcMain.handle('fs:rebuildGraph', (_event, knowledgePath: string): GraphData => {
+  const knowledgeDir = join(knowledgePath, 'knowledge')
+  const nodes: GraphData['nodes'] = []
+  const edges: GraphData['edges'] = []
+
+  // Collect all nodes from markdown files
+  collectNodes(knowledgeDir, knowledgePath, nodes)
+
+  // Build edges from explicit connections
+  const nodeIds = new Set(nodes.map(n => n.id))
+  const pathToId = new Map(nodes.map(n => [n.path, n.id]))
+
+  for (const node of nodes) {
+    // Read connections from frontmatter
+    const fsPath = join(knowledgePath, node.path + '.md')
+    const indexPath = join(knowledgePath, node.path, 'index.md')
+    let connections: string[] = []
+    for (const p of [fsPath, indexPath]) {
+      try {
+        const raw = readFileSync(p, 'utf-8')
+        const parsed = matter(raw)
+        connections = parsed.data.connections || []
+        break
+      } catch { /* skip */ }
+    }
+
+    for (const connPath of connections) {
+      const targetId = pathToId.get(connPath)
+      if (targetId && nodeIds.has(targetId) && targetId !== node.id) {
+        const alreadyExists = edges.some(
+          e => (e.source === node.id && e.target === targetId) ||
+               (e.source === targetId && e.target === node.id)
+        )
+        if (!alreadyExists) {
+          edges.push({ source: node.id, target: targetId, reason: 'explicit connection' })
+        }
+      }
+    }
+  }
+
+  // Build edges from shared tags (2+ shared)
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const shared = nodes[i].tags.filter(t => nodes[j].tags.includes(t))
+      if (shared.length >= 2) {
+        const alreadyExists = edges.some(
+          e => (e.source === nodes[i].id && e.target === nodes[j].id) ||
+               (e.source === nodes[j].id && e.target === nodes[i].id)
+        )
+        if (!alreadyExists) {
+          edges.push({
+            source: nodes[i].id,
+            target: nodes[j].id,
+            reason: `shared tags: ${shared.join(', ')}`
+          })
+        }
+      }
+    }
+  }
+
+  const graphData: GraphData = { nodes, edges }
+  const graphPath = join(knowledgePath, '_meta', 'graph.json')
+  writeFileSync(graphPath, JSON.stringify(graphData, null, 2), 'utf-8')
+  return graphData
+})
+
 // --- IPC: embedded terminal (PTY) ---
 
 ipcMain.handle('pty:create', (_event, knowledgePath: string) => {
@@ -262,6 +328,48 @@ function scaffoldKnowledgeFolder(knowledgePath: string, overwrite: boolean = fal
 // --- Helpers ---
 
 const EXCLUDED_DIRS = new Set(['_meta', '_templates', '.git', 'node_modules'])
+
+function collectNodes(dir: string, basePath: string, nodes: GraphData['nodes']): void {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch {
+    return
+  }
+
+  for (const entry of entries) {
+    const fsPath = join(dir, entry)
+    let stat
+    try {
+      stat = statSync(fsPath)
+    } catch {
+      continue
+    }
+
+    if (stat.isDirectory()) {
+      if (EXCLUDED_DIRS.has(entry)) continue
+      collectNodes(fsPath, basePath, nodes)
+    } else if (entry.endsWith('.md')) {
+      try {
+        const raw = readFileSync(fsPath, 'utf-8')
+        const parsed = matter(raw)
+        const fm = parsed.data
+        if (!fm.id || !fm.title) continue
+
+        const hasOpenTodos = Array.isArray(fm.todos) &&
+          fm.todos.some((t: { status: string }) => t.status === 'pending' || t.status === 'in_progress')
+
+        nodes.push({
+          id: fm.id,
+          title: fm.title,
+          path: fm.path || fsPath.slice(basePath.length + 1).replace(/\.md$/, '').replace(/\\/g, '/'),
+          tags: Array.isArray(fm.tags) ? fm.tags : [],
+          hasOpenTodos
+        })
+      } catch { /* skip malformed */ }
+    }
+  }
+}
 
 function buildTree(basePath: string, currentPath: string): TreeItem[] {
   const items: TreeItem[] = []

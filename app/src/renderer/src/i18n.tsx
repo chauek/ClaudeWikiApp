@@ -93,6 +93,8 @@ const translations = {
   'graph.hasOpenTodos':    { pl: 'Ma otwarte zadania',  en: 'Has open tasks' },
   'graph.fitView':         { pl: 'Dopasuj widok',       en: 'Fit to view' },
   'graph.openNode':        { pl: 'Otwórz nod',          en: 'Open node' },
+  'graph.rebuild':         { pl: 'Wygeneruj graf',       en: 'Rebuild graph' },
+  'graph.rebuilding':      { pl: 'Generowanie...',       en: 'Rebuilding...' },
 } as const
 
 type TranslationKey = keyof typeof translations

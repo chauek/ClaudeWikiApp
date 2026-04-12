@@ -36,6 +36,7 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
   const [simLinks, setSimLinks] = useState<SimLink[]>([])
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<string | null>(null)
+  const [rebuilding, setRebuilding] = useState(false)
 
   // Transform state (zoom + pan)
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 })
@@ -251,6 +252,16 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
     })
   }, [simNodes])
 
+  const handleRebuildGraph = useCallback(async () => {
+    setRebuilding(true)
+    try {
+      const data = await window.api.rebuildGraph(knowledgePath)
+      if (data) setGraphData(data)
+    } finally {
+      setRebuilding(false)
+    }
+  }, [knowledgePath])
+
   // Auto-fit on first render with nodes
   const didAutoFit = useRef(false)
   useEffect(() => {
@@ -298,6 +309,13 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
             <line x1="8" y1="6" x2="16" y2="6" />
           </svg>
           <span>{t('graph.empty')}</span>
+          <button
+            className="graph-rebuild-btn"
+            onClick={handleRebuildGraph}
+            disabled={rebuilding}
+          >
+            {rebuilding ? t('graph.rebuilding') : t('graph.rebuild')}
+          </button>
         </div>
       </div>
     )

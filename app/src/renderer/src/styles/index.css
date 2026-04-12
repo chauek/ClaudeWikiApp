@@ -1696,6 +1696,29 @@ ul { list-style: none; }
   font-size: 13px;
 }
 
+.graph-rebuild-btn {
+  margin-top: 12px;
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.graph-rebuild-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--surface-1);
+}
+
+.graph-rebuild-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
 /* ─── SVG Canvas ─────────────────────────────────────────── */
 
 .graph-canvas {

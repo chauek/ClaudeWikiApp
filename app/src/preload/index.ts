@@ -29,6 +29,9 @@ const api = {
   readGraph: (knowledgePath: string): Promise<GraphData | null> =>
     ipcRenderer.invoke('fs:readGraph', knowledgePath),
 
+  rebuildGraph: (knowledgePath: string): Promise<GraphData> =>
+    ipcRenderer.invoke('fs:rebuildGraph', knowledgePath),
+
   openExternal: (url: string): Promise<void> =>
     ipcRenderer.invoke('shell:openExternal', url),
 
