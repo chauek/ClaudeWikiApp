@@ -28,8 +28,7 @@
           ]
         }
       ],
-      "category": "public.app-category.productivity",
-      "icon": "build/icon.icns"
+      "category": "public.app-category.productivity"
     },
     "dmg": {
       "title": "ClaudeWiki ${version}"
@@ -39,7 +38,9 @@
         "from": "resources/wiki-scaffold",
         "to": "wiki-scaffold"
       }
-    ]
+    ],
+    "icon": "build/icon.icns",
+    "npmRebuild": false
   },
   "dependencies": {
     "@types/d3-force": "^3.0.10",
