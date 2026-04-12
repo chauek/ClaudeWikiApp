@@ -132,6 +132,34 @@ ipcMain.handle('fs:writeTodoStatus', (_event, knowledgePath: string, todoId: str
   }
 })
 
+ipcMain.handle('fs:writeTodoPriority', (_event, knowledgePath: string, todoId: string, priority: string): boolean => {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+    const todo = data.todos.find(t => t.id === todoId)
+    if (!todo) return false
+    todo.priority = priority as TodosFile['todos'][number]['priority']
+    writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch {
+    return false
+  }
+})
+
+ipcMain.handle('fs:writeTodoSize', (_event, knowledgePath: string, todoId: string, size: string): boolean => {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+    const todo = data.todos.find(t => t.id === todoId)
+    if (!todo) return false
+    todo.size = size as TodosFile['todos'][number]['size']
+    writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch {
+    return false
+  }
+})
+
 ipcMain.handle('fs:readGraph', (_event, knowledgePath: string): GraphData | null => {
   try {
     const graphPath = join(knowledgePath, '_meta', 'graph.json')
