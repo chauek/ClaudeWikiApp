@@ -3,14 +3,20 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.1.0)'
+        required: true
 
 permissions:
   contents: write
 
 jobs:
-  build-mac:
-    runs-on: macos-13  # Intel x64 runner
+  release:
+    runs-on: macos-14
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -23,22 +29,98 @@ jobs:
           cache: 'npm'
           cache-dependency-path: app/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: app
+      - name: Determine version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Build and package
-        run: npx electron-vite build && npx electron-builder --mac --arch=x64
-        working-directory: app
+      # Build without signing is always available.
+      # Signing + notarization kick in only when the Apple Developer
+      # credentials are wired up as repository secrets.
+      - name: Check signing availability
+        id: signed
         env:
-          # Skip code signing (unsigned build — users need to right-click > Open on first launch)
-          # To enable signing: add CSC_LINK and CSC_KEY_PASSWORD secrets + Apple Developer account
-          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CERT_P12: ${{ secrets.DEVELOPER_ID_CERT_P12_BASE64 }}
+        run: |
+          if [[ -n "$CERT_P12" ]]; then
+            echo "signing=true" >> "$GITHUB_OUTPUT"
+            echo "==> Apple signing credentials present — will sign + notarize"
+          else
+            echo "signing=false" >> "$GITHUB_OUTPUT"
+            echo "==> No signing credentials — building UNSIGNED DMG (pre-release)"
+          fi
 
-      - name: Upload DMG to Release
+      - name: Import signing certificate
+        if: steps.signed.outputs.signing == 'true'
+        env:
+          DEVELOPER_ID_CERT_P12_BASE64: ${{ secrets.DEVELOPER_ID_CERT_P12_BASE64 }}
+          DEVELOPER_ID_CERT_PASSWORD:   ${{ secrets.DEVELOPER_ID_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD:            "ci-temp-keychain-password"
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/developer-id.p12"
+          echo "$DEVELOPER_ID_CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" \
+              -P "$DEVELOPER_ID_CERT_PASSWORD" \
+              -A -t cert -f pkcs12 \
+              -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychain -d user | sed 's/"//g')
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      - name: Build
+        run: scripts/release/build.sh
+
+      - name: Sign
+        if: steps.signed.outputs.signing == 'true'
+        env:
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+        run: scripts/release/sign.sh
+
+      - name: Notarize
+        if: steps.signed.outputs.signing == 'true'
+        env:
+          APPLE_ID:           ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID:      ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: scripts/release/notarize.sh
+
+      - name: Make DMG
+        env:
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+        run: scripts/release/make-dmg.sh
+
+      - name: Create GitHub Release (signed)
+        if: steps.signed.outputs.signing == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          name: ClaudeWiki ${{ github.ref_name }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ClaudeWiki ${{ steps.version.outputs.version }}
           generate_release_notes: true
           files: |
-            app/dist-electron/*.dmg
+            app/dist-electron/ClaudeWiki-${{ steps.version.outputs.version }}.dmg
+
+      - name: Create GitHub Release (unsigned pre-release)
+        if: steps.signed.outputs.signing != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: ClaudeWiki ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          prerelease: true
+          body: |
+            > ⚠️ **Unsigned build.** This release is not code-signed or notarized.
+            > On first launch macOS Gatekeeper will warn about an unidentified developer.
+            > Right-click `ClaudeWiki.app` → **Open** → confirm in the dialog.
+            > macOS remembers the exception so subsequent launches are clean.
+          files: |
+            app/dist-electron/ClaudeWiki-${{ steps.version.outputs.version }}.dmg

@@ -55,7 +55,7 @@ npm run build
 
 ## Releasing
 
-Releases are built automatically on GitHub Actions (macOS x64) and published as GitHub Releases with a DMG attached.
+Releases are built automatically on GitHub Actions (macOS arm64) and published as GitHub Releases with a DMG attached.
 
 ### Create a release
 
@@ -79,7 +79,8 @@ The build takes ~15 minutes. Monitor progress at **Actions** tab on GitHub.
 
 - Builds are **unsigned** — on first launch macOS will show a Gatekeeper warning. Users need to right-click → Open to bypass it.
 - To enable code signing, add `CSC_LINK` and `CSC_KEY_PASSWORD` secrets to the repo (requires an Apple Developer account).
-- The workflow uses `macos-13` (Intel x64) runner. On Apple Silicon the app runs via Rosetta 2.
+- The workflow uses `macos-14` (Apple Silicon arm64) runner. On Intel Macs the app runs via Rosetta 2.
+- CI build scripts live in `scripts/release/` — separate steps for build, sign, notarize, DMG (mirrors the pattern from other projects).
 
 ## Knowledge Base Structure
 

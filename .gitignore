@@ -27,4 +27,4 @@ npm-debug.log*
 
 # Electron builder artifacts
 app/dist-electron/
-release/
+app/release/
