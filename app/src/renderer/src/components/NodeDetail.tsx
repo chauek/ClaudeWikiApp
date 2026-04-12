@@ -78,16 +78,45 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
         <section className="node-detail-todos">
           <h2 className="node-detail-section-title">{t('node.tasks')}</h2>
           <ul className="node-detail-todo-list">
-            {frontmatter.todos.map((todo, i) => (
-              <li key={i} className={`detail-todo detail-todo--${todo.status}`}>
-                <span className="detail-todo-icon">
-                  {todo.status === 'done' ? '✓' : todo.status === 'in_progress' ? '◐' : '○'}
-                </span>
-                <span className={todo.status === 'done' ? 'detail-todo-done' : ''}>
-                  {todo.text}
-                </span>
-              </li>
-            ))}
+            {frontmatter.todos.map((todo, i) => {
+              const pc = todo.priority
+                ? ({
+                    critical: { color: '#ff6b6b', bg: 'rgba(255,107,107,0.15)' },
+                    high:     { color: '#ff9f43', bg: 'rgba(255,159,67,0.15)'  },
+                    medium:   { color: '#f59e0a', bg: 'rgba(245,158,10,0.15)'  },
+                    low:      { color: '#6bcb77', bg: 'rgba(107,203,119,0.15)' },
+                    someday:  { color: '#585858', bg: 'rgba(88,88,88,0.18)'    },
+                  }[todo.priority])
+                : null
+              return (
+                <li key={i} className={`detail-todo detail-todo--${todo.status}`}>
+                  <span className="detail-todo-icon">
+                    {todo.status === 'done' ? '✓' : todo.status === 'in_progress' ? '◐' : '○'}
+                  </span>
+                  <span className={todo.status === 'done' ? 'detail-todo-done' : ''} style={{ flex: 1 }}>
+                    {todo.text}
+                  </span>
+                  {todo.status !== 'done' && pc && (
+                    <span style={{
+                      fontSize: '10px', fontWeight: 700, letterSpacing: '0.05em', textTransform: 'uppercase',
+                      borderRadius: '4px', padding: '2px 6px', background: pc.bg, color: pc.color,
+                      flexShrink: 0,
+                    }}>
+                      {todo.priority}
+                    </span>
+                  )}
+                  {todo.status !== 'done' && todo.size && (
+                    <span style={{
+                      fontSize: '10px', fontWeight: 600, color: 'var(--text-2)',
+                      background: 'var(--surface-3)', borderRadius: '4px', padding: '2px 6px',
+                      flexShrink: 0,
+                    }}>
+                      {todo.size}
+                    </span>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </section>
       )}
