@@ -9,9 +9,14 @@ export interface NodeFrontmatter {
   updated: string
 }
 
+export type TodoPriority = 'critical' | 'high' | 'medium' | 'low' | 'someday'
+export type TodoSize = 'S' | 'M' | 'L' | 'XL'
+
 export interface TodoInNode {
   text: string
   status: 'pending' | 'in_progress' | 'done'
+  priority?: TodoPriority
+  size?: TodoSize
 }
 
 export interface TreeItem {
@@ -27,6 +32,8 @@ export interface TodoItem {
   id: string
   text: string
   status: 'pending' | 'in_progress' | 'done'
+  priority?: TodoPriority
+  size?: TodoSize
   nodePath: string
   nodeTitle: string
   tags: string[]
