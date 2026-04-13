@@ -2031,42 +2031,42 @@ ul { list-style: none; }
 }
 
 .graph-node-glow {
-  fill: var(--accent);
-  opacity: 0.08;
+  fill: hsl(var(--node-hue) 70% 60%);
+  opacity: 0.12;
 }
 
 .graph-node-circle {
-  fill: var(--surface-2);
-  stroke: var(--border);
+  fill: hsl(var(--node-hue) 45% 20% / 0.85);
+  stroke: hsl(var(--node-hue) 55% 45%);
   stroke-width: 1.5;
   transition: fill .2s, stroke .2s, opacity .2s;
 }
 
 .graph-node-circle--depth-0 {
-  fill: hsl(210 80% 55% / 0.45);
-  stroke: hsl(210 80% 70%);
+  fill: hsl(var(--node-hue) 60% 28% / 0.9);
+  stroke: hsl(var(--node-hue) 70% 60%);
   stroke-width: 2;
 }
 
 .graph-node-circle--depth-1 {
-  fill: hsl(270 65% 60% / 0.35);
-  stroke: hsl(270 65% 75%);
+  fill: hsl(var(--node-hue) 50% 23% / 0.85);
+  stroke: hsl(var(--node-hue) 60% 52%);
 }
 
 .graph-node-circle--depth-2 {
-  fill: hsl(162 55% 45% / 0.35);
-  stroke: hsl(162 55% 62%);
+  fill: hsl(var(--node-hue) 45% 21% / 0.82);
+  stroke: hsl(var(--node-hue) 55% 48%);
 }
 
 .graph-node-circle--hovered {
-  fill: var(--surface-3);
-  stroke: var(--accent);
+  fill: hsl(var(--node-hue) 65% 30% / 1);
+  stroke: hsl(var(--node-hue) 75% 65%);
   stroke-width: 2;
 }
 
 .graph-node-circle--selected {
-  fill: var(--surface-3);
-  stroke: var(--accent);
+  fill: hsl(var(--node-hue) 65% 32% / 1);
+  stroke: hsl(var(--node-hue) 80% 70%);
   stroke-width: 2.5;
 }
 
@@ -2081,7 +2081,21 @@ ul { list-style: none; }
 
 .graph-node-circle--has-todos.graph-node-circle--hovered,
 .graph-node-circle--has-todos.graph-node-circle--selected {
-  stroke: var(--accent);
+  stroke: hsl(var(--node-hue) 80% 70%);
+}
+
+.graph-node-inner-label {
+  fill: hsl(var(--node-hue) 20% 90%);
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: opacity .2s;
+  user-select: none;
+}
+
+.graph-node-inner-label--dimmed {
+  opacity: 0.2;
 }
 
 .graph-node-label {

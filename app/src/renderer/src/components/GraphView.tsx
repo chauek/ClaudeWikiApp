@@ -382,11 +382,14 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
             const isConnected = connectedToHovered.has(node.id)
             const isSelected = selectedNode === node.id
             const dimmed = hoveredNode && !isHovered && !isConnected
+            const hue = hashToHue(getParentFolder(node.path))
+            const icon = getNodeIcon(node.title)
             return (
               <g
                 key={node.id}
                 className="graph-node"
                 transform={`translate(${node.x || 0},${node.y || 0})`}
+                style={{ '--node-hue': hue } as React.CSSProperties}
                 onMouseEnter={() => setHoveredNode(node.id)}
                 onMouseLeave={() => setHoveredNode(null)}
                 onMouseDown={(e) => handleNodeMouseDown(e, node.id)}
@@ -405,6 +408,13 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
                   r={radius}
                   className={`graph-node-circle${depthClass}${isHovered ? ' graph-node-circle--hovered' : ''}${isSelected ? ' graph-node-circle--selected' : ''}${dimmed ? ' graph-node-circle--dimmed' : ''}${node.hasOpenTodos ? ' graph-node-circle--has-todos' : ''}`}
                 />
+                {/* Inner icon: emoji or first letter */}
+                <text
+                  className={`graph-node-inner-label${dimmed ? ' graph-node-inner-label--dimmed' : ''}`}
+                  style={{ fontSize: icon.isEmoji ? radius * 0.78 : radius * 0.62 }}
+                >
+                  {icon.text}
+                </text>
                 {/* Label */}
                 <text
                   y={radius + 16}
@@ -512,4 +522,23 @@ function getNodeRadius(connectionCount: number, depth: number = 0): number {
   const depthBase = depth === 0 ? 30 : depth === 1 ? 24 : depth === 2 ? 20 : 16
   const bonus = connectionCount >= 5 ? 4 : connectionCount >= 2 ? 2 : 0
   return depthBase + bonus
+}
+
+function getParentFolder(path: string): string {
+  const parts = path.split('/').filter(Boolean)
+  return parts.length >= 2 ? parts[parts.length - 2] : parts[0] || 'root'
+}
+
+function hashToHue(str: string): number {
+  let h = 0
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) & 0xffff
+  }
+  return h % 360
+}
+
+function getNodeIcon(title: string): { text: string; isEmoji: boolean } {
+  const match = title.match(/^\p{Extended_Pictographic}/u)
+  if (match) return { text: match[0], isEmoji: true }
+  return { text: title.charAt(0).toUpperCase(), isEmoji: false }
 }
