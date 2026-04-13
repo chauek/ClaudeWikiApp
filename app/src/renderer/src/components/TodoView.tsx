@@ -35,10 +35,11 @@ const COLOR_CYCLE = [
 
 export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
   const t = useT()
-  const [viewMode, setViewMode] = useState<'bySection' | 'byPriority'>('bySection')
+  const [viewMode, setViewMode] = useState<'bySection' | 'byPriority' | 'archived'>('bySection')
   const groups = useMemo(() => {
     const map = new Map<string, { nodeTitle: string; nodePath: string; items: TodoItem[] }>()
     for (const todo of todos) {
+      if (todo.status === 'archived') continue
       const existing = map.get(todo.nodePath)
       if (existing) {
         existing.items.push(todo)
@@ -58,6 +59,20 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
     })
   }, [todos])
 
+  const archivedGroups = useMemo(() => {
+    const map = new Map<string, { nodeTitle: string; nodePath: string; items: TodoItem[] }>()
+    for (const todo of todos) {
+      if (todo.status !== 'archived') continue
+      const existing = map.get(todo.nodePath)
+      if (existing) {
+        existing.items.push(todo)
+      } else {
+        map.set(todo.nodePath, { nodeTitle: todo.nodeTitle, nodePath: todo.nodePath, items: [todo] })
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.nodeTitle.localeCompare(b.nodeTitle))
+  }, [todos])
+
   const [priorityOverride, setPriorityOverride] = useState<Map<string, string>>(new Map())
 
   const handlePriorityChange = (id: string, p: string): void => {
@@ -68,6 +83,7 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
   const priorityGroups = useMemo(() => {
     const map = new Map<string, { priority: string; items: TodoItem[] }>()
     for (const todo of todos) {
+      if (todo.status === 'archived') continue
       const key = priorityOverride.get(todo.id) ?? todo.priority ?? 'medium'
       const existing = map.get(key)
       if (existing) {
@@ -117,35 +133,60 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
             >
               {t('todo.viewByPriority')}
             </button>
+            <button
+              className={`todo-view-toggle-btn${viewMode === 'archived' ? ' todo-view-toggle-btn--active' : ''}`}
+              onClick={() => setViewMode('archived')}
+            >
+              {t('todo.viewArchived')}
+            </button>
           </div>
 
           {/* Groups */}
           <div className="todo-groups-list">
-            {viewMode === 'bySection'
-              ? groups.map((group, i) => (
-                  <TodoGroup
-                    key={group.nodePath}
-                    group={group}
-                    defaultOpen={i === 0}
-                    accentColor={COLOR_CYCLE[i % COLOR_CYCLE.length]}
-                    knowledgePath={knowledgePath}
-                  />
-                ))
-              : priorityGroups.map((pg, i) => (
-                  <PriorityGroup
-                    key={pg.priority}
-                    priority={pg.priority}
-                    items={pg.items}
-                    defaultOpen={i === 0}
-                    knowledgePath={knowledgePath}
-                    priorityOverride={priorityOverride}
-                    onPriorityChange={handlePriorityChange}
-                  />
-                ))
-            }
+            {viewMode === 'bySection' && groups.map((group, i) => (
+              <TodoGroup
+                key={group.nodePath}
+                group={group}
+                defaultOpen={i === 0}
+                accentColor={COLOR_CYCLE[i % COLOR_CYCLE.length]}
+                knowledgePath={knowledgePath}
+                variant="active"
+              />
+            ))}
+            {viewMode === 'byPriority' && priorityGroups.map((pg, i) => (
+              <PriorityGroup
+                key={pg.priority}
+                priority={pg.priority}
+                items={pg.items}
+                defaultOpen={i === 0}
+                knowledgePath={knowledgePath}
+                priorityOverride={priorityOverride}
+                onPriorityChange={handlePriorityChange}
+              />
+            ))}
+            {viewMode === 'archived' && (
+              archivedGroups.length === 0
+                ? (
+                    <div className="todo-view-empty">
+                      <span className="todo-view-empty-icon"><IconCheck /></span>
+                      <p>{t('todo.noArchived')}</p>
+                    </div>
+                  )
+                : archivedGroups.map((group, i) => (
+                    <TodoGroup
+                      key={group.nodePath}
+                      group={group}
+                      defaultOpen={i === 0}
+                      accentColor={COLOR_CYCLE[i % COLOR_CYCLE.length]}
+                      knowledgePath={knowledgePath}
+                      variant="archived"
+                    />
+                  ))
+            )}
           </div>
 
           {/* Bento stats */}
+          {viewMode !== 'archived' && (
           <div className="todo-bento">
             <div className="todo-bento-left">
               <div className="todo-bento-bg-icon">
@@ -191,6 +232,7 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
               </button>
             </div>
           </div>
+          )}
 
         </div>
       </div>
@@ -216,11 +258,13 @@ function TodoGroup({
   defaultOpen,
   accentColor,
   knowledgePath,
+  variant = 'active',
 }: {
   group: Group
   defaultOpen: boolean
   accentColor: Accent
   knowledgePath: string
+  variant?: 'active' | 'archived'
 }): JSX.Element {
   const t = useT()
   const [open, setOpen] = useState(defaultOpen)
@@ -250,8 +294,24 @@ function TodoGroup({
   }, [openDropdown])
 
   const handleToggle = (todo: TodoItem): void => {
+    if (variant === 'archived') return
     const current = statusOverride.get(todo.id) ?? todo.status
     const next: TodoItem['status'] = current === 'done' ? 'pending' : 'done'
+    setStatusOverride(prev => new Map(prev).set(todo.id, next))
+    window.api.writeTodoStatus(knowledgePath, todo.id, next)
+  }
+
+  const handleStatus = (todo: TodoItem, next: TodoItem['status']): void => {
+    const leavesView =
+      (variant === 'active'   && next === 'archived') ||
+      (variant === 'archived' && next !== 'archived')
+    if (leavesView) {
+      setSeenItems(prev => {
+        const n = new Map(prev)
+        n.delete(todo.id)
+        return n
+      })
+    }
     setStatusOverride(prev => new Map(prev).set(todo.id, next))
     window.api.writeTodoStatus(knowledgePath, todo.id, next)
   }
@@ -282,10 +342,13 @@ function TodoGroup({
 
   const pendingCount  = displayItems.filter(ti => ti.status === 'pending').length
   const inProgCount   = displayItems.filter(ti => ti.status === 'in_progress').length
+  const archivedCount = displayItems.filter(ti => ti.status === 'archived').length
 
-  const subtitle = inProgCount > 0
-    ? `${inProgCount} ${t('todo.inProgressShort')} · ${pendingCount} ${t('todo.pendingShort')}`
-    : `${pendingCount} ${t('todo.activeTasks')}`
+  const subtitle = variant === 'archived'
+    ? `${archivedCount} ${t('todo.status.archived').toLowerCase()}`
+    : inProgCount > 0
+      ? `${inProgCount} ${t('todo.inProgressShort')} · ${pendingCount} ${t('todo.pendingShort')}`
+      : `${pendingCount} ${t('todo.activeTasks')}`
 
   return (
     <div className={`tg${open ? ' tg--open' : ''}`}>
@@ -310,26 +373,32 @@ function TodoGroup({
         <div className="tg-items">
           {displayItems.map(todo => {
             const done = todo.status === 'done'
+            const archived = todo.status === 'archived'
             const pc = todo.priority ? PRIORITY_COLOR[todo.priority] : null
             const borderColor = pc ? pc.border : 'transparent'
             const isOpenPriority = openDropdown?.id === todo.id && openDropdown.type === 'priority'
             const isOpenSize = openDropdown?.id === todo.id && openDropdown.type === 'size'
+            const isArchivedView = variant === 'archived'
 
             return (
               <div
                 key={todo.id}
-                className={`tg-item${done ? ' tg-item--done' : ` tg-item--${todo.status}`}`}
+                className={`tg-item${done ? ' tg-item--done' : archived ? ' tg-item--archived' : ` tg-item--${todo.status}`}`}
                 style={{ borderLeft: `3px solid ${borderColor}`, position: 'relative' }}
               >
                 <span
                   className="tg-item-check"
-                  style={{ color: done ? 'var(--text-3)' : accentColor.color }}
-                  onClick={() => handleToggle(todo)}
+                  style={{
+                    color: done || archived ? 'var(--text-3)' : accentColor.color,
+                    cursor: isArchivedView ? 'default' : 'pointer',
+                    opacity: isArchivedView ? 0.5 : 1,
+                  }}
+                  onClick={isArchivedView ? undefined : () => handleToggle(todo)}
                   role="button"
-                  tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
+                  tabIndex={isArchivedView ? -1 : 0}
+                  onKeyDown={isArchivedView ? undefined : (e => e.key === 'Enter' && handleToggle(todo))}
                 >
-                  {done
+                  {done || archived
                     ? <IconCheckDone />
                     : todo.status === 'in_progress'
                       ? <IconCheckInProgress />
@@ -338,20 +407,49 @@ function TodoGroup({
                 </span>
                 <span
                   className={`tg-item-text${done ? ' tg-item-text--done' : todo.status === 'in_progress' ? ' tg-item-text--progress' : ''}`}
-                  onClick={() => handleToggle(todo)}
+                  onClick={isArchivedView ? undefined : () => handleToggle(todo)}
                   role="button"
-                  tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
-                  style={{ flex: 1, cursor: 'pointer' }}
+                  tabIndex={isArchivedView ? -1 : 0}
+                  onKeyDown={isArchivedView ? undefined : (e => e.key === 'Enter' && handleToggle(todo))}
+                  style={{ flex: 1, cursor: isArchivedView ? 'default' : 'pointer' }}
                 >
                   {todo.text}
                 </span>
-                {!done && todo.status === 'in_progress' && (
+
+                {/* Action slot */}
+                {!isArchivedView && todo.status === 'pending' && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--start"
+                    onClick={() => handleStatus(todo, 'in_progress')}
+                  >
+                    {t('todo.startProgress')}
+                  </button>
+                )}
+                {!isArchivedView && todo.status === 'in_progress' && (
                   <span className="tg-item-badge">{t('todo.inProgressShort')}</span>
+                )}
+                {!isArchivedView && todo.status === 'done' && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--archive"
+                    onClick={() => handleStatus(todo, 'archived')}
+                  >
+                    {t('todo.archive')}
+                  </button>
+                )}
+                {isArchivedView && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--unarchive"
+                    onClick={() => handleStatus(todo, 'done')}
+                  >
+                    {t('todo.unarchive')}
+                  </button>
                 )}
 
                 {/* Priority badge */}
-                {!done && todo.priority && pc && (
+                {!isArchivedView && !done && todo.priority && pc && (
                   <span style={{ position: 'relative' }}>
                     <span
                       className="tg-priority-badge"
@@ -378,7 +476,7 @@ function TodoGroup({
                 )}
 
                 {/* Size badge */}
-                {!done && (
+                {!isArchivedView && !done && (
                   <span style={{ position: 'relative' }}>
                     <span
                       className="tg-size-badge"
@@ -464,6 +562,18 @@ function PriorityGroup({
     setSizeOverride(prev => new Map(prev).set(todo.id, size))
     window.api.writeTodoSize(knowledgePath, todo.id, size)
     setOpenDropdown(null)
+  }
+
+  const handleStatus = (todo: TodoItem, next: TodoItem['status']): void => {
+    if (next === 'archived') {
+      setSeenItems(prev => {
+        const n = new Map(prev)
+        n.delete(todo.id)
+        return n
+      })
+    }
+    setStatusOverride(prev => new Map(prev).set(todo.id, next))
+    window.api.writeTodoStatus(knowledgePath, todo.id, next)
   }
 
   const handlePriority = (todo: TodoItem, p: string): void => {
@@ -562,8 +672,27 @@ function PriorityGroup({
                 >
                   {todo.text}
                 </span>
-                {!done && todo.status === 'in_progress' && (
+                {/* Action slot */}
+                {todo.status === 'pending' && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--start"
+                    onClick={() => handleStatus(todo, 'in_progress')}
+                  >
+                    {t('todo.startProgress')}
+                  </button>
+                )}
+                {todo.status === 'in_progress' && (
                   <span className="pg-item-badge">{t('todo.inProgressShort')}</span>
+                )}
+                {todo.status === 'done' && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--archive"
+                    onClick={() => handleStatus(todo, 'archived')}
+                  >
+                    {t('todo.archive')}
+                  </button>
                 )}
 
                 {/* Priority badge */}

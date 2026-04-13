@@ -38,11 +38,15 @@ path: "knowledge/project/topic"                         # path relative to Knowl
 tags: [tag1, tag2]                                      # tags for filtering and linking
 todos:
   - text: "Task description"
-    status: pending                                     # pending | in_progress | done
+    status: pending                                     # pending | in_progress | done | archived
     priority: medium                                    # critical | high | medium | low | someday
     size: M                                             # S | M | L | XL
   - text: "Completed task"
     status: done
+    priority: low
+    size: S
+  - text: "Old finished task"
+    status: archived                                    # hidden from active views; shown in Archived view only
     priority: low
     size: S
 connections: ["knowledge/other-project/index"]          # paths to related nodes
@@ -121,7 +125,7 @@ After every change to nodes, update `_meta/todos.json`.
     {
       "id": "node-id--task-slug",
       "text": "Task description",
-      "status": "pending",
+      "status": "pending",                             // pending | in_progress | done | archived
       "priority": "medium",
       "size": "M",
       "nodePath": "knowledge/project/topic",
@@ -135,6 +139,7 @@ After every change to nodes, update `_meta/todos.json`.
 - `id` — build as `{node-id}--{slug-of-todo-text}`
 - Aggregate todos from **all** nodes in the base
 - Remove todos whose node has been deleted
+- **Status lifecycle:** `pending → in_progress → done → archived`. Archived tasks are hidden from the "By section" and "By priority" views and appear only in the "Archived" view. Unarchiving restores a task to `done`.
 
 ## Connection Rules
 

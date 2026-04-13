@@ -14,7 +14,7 @@ export type TodoSize = 'S' | 'M' | 'L' | 'XL'
 
 export interface TodoInNode {
   text: string
-  status: 'pending' | 'in_progress' | 'done'
+  status: 'pending' | 'in_progress' | 'done' | 'archived'
   priority?: TodoPriority
   size?: TodoSize
 }
@@ -31,7 +31,7 @@ export interface TreeItem {
 export interface TodoItem {
   id: string
   text: string
-  status: 'pending' | 'in_progress' | 'done'
+  status: 'pending' | 'in_progress' | 'done' | 'archived'
   priority?: TodoPriority
   size?: TodoSize
   nodePath: string

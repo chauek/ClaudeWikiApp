@@ -55,6 +55,12 @@ const translations = {
   'todo.size':              { pl: 'Rozmiar',    en: 'Size'     },
   'todo.viewBySection':     { pl: 'Wg sekcji',  en: 'By section'  },
   'todo.viewByPriority':    { pl: 'Wg priorytetu', en: 'By priority' },
+  'todo.viewArchived':      { pl: 'Zarchiwizowane', en: 'Archived'  },
+  'todo.startProgress':     { pl: 'Rozpocznij',      en: 'Start progress' },
+  'todo.archive':           { pl: 'Archiwizuj',      en: 'Archive'        },
+  'todo.unarchive':         { pl: 'Przywróć',        en: 'Unarchive'      },
+  'todo.noArchived':        { pl: 'Brak zarchiwizowanych zadań', en: 'No archived tasks' },
+  'todo.status.archived':   { pl: 'Zarchiwizowane',  en: 'Archived'       },
 
   // ── DepartmentList ────────────────────────────────────
   'dept.noDepartments':  { pl: 'Brak działów',   en: 'No departments' },

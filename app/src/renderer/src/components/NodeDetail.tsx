@@ -74,11 +74,11 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
       </div>
 
       {/* ── Todos ────────────────────────────────────────────── */}
-      {frontmatter.todos && frontmatter.todos.length > 0 && (
+      {frontmatter.todos && frontmatter.todos.filter(td => td.status !== 'archived').length > 0 && (
         <section className="node-detail-todos">
           <h2 className="node-detail-section-title">{t('node.tasks')}</h2>
           <ul className="node-detail-todo-list">
-            {frontmatter.todos.map((todo, i) => {
+            {frontmatter.todos.filter(td => td.status !== 'archived').map((todo, i) => {
               const pc = todo.priority
                 ? ({
                     critical: { color: '#ff6b6b', bg: 'rgba(255,107,107,0.15)' },

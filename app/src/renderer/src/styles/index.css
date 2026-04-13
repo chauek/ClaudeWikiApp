@@ -1263,6 +1263,65 @@ ul { list-style: none; }
   letter-spacing: .04em;
 }
 
+.tg-action-btn {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border-soft);
+  background: transparent;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1.3;
+}
+
+.tg-action-btn:hover {
+  background: var(--surface-4);
+  color: var(--text);
+}
+
+.tg-action-btn--start {
+  color: #c3c0ff;
+  border-color: rgba(195,192,255,0.4);
+}
+
+.tg-action-btn--start:hover {
+  background: rgba(195,192,255,0.12);
+  color: #c3c0ff;
+  border-color: #c3c0ff;
+}
+
+.tg-action-btn--archive {
+  color: #9bffce;
+  border-color: rgba(155,255,206,0.35);
+}
+
+.tg-action-btn--archive:hover {
+  background: rgba(155,255,206,0.10);
+  color: #9bffce;
+  border-color: #9bffce;
+}
+
+.tg-action-btn--unarchive {
+  color: #f59e0a;
+  border-color: rgba(245,158,10,0.4);
+}
+
+.tg-action-btn--unarchive:hover {
+  background: rgba(245,158,10,0.12);
+  color: #f59e0a;
+  border-color: #f59e0a;
+}
+
+.tg-item--archived .tg-item-text {
+  color: var(--text-2);
+  opacity: 0.75;
+}
+
 .tg-priority-badge {
   font-size: 10px;
   font-weight: 700;
