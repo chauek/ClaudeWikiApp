@@ -29,6 +29,11 @@ update **only** `app/resources/wiki-scaffold/CLAUDE.md`. The app will propagate 
 `app/resources/wiki-scaffold/_meta/scaffold-version.json`** (integer, increment by 1).
 This triggers the "outdated" notice in Settings, prompting users to update their knowledge base.
 
+**Rule — scaffold sync check:** After any change to data structures (todos, graph.json schema,
+knowledge base frontmatter, node types, or any stored data format), always check whether
+`app/resources/wiki-scaffold/` needs to be updated to match. If any scaffold file was changed,
+bump the version in `_meta/scaffold-version.json`.
+
 ## Desktop Application Architecture
 
 A detailed description of the Electron app architecture is in `docs/architecture-app.md`.

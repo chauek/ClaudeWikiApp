@@ -24,9 +24,6 @@ interface SimLink extends SimulationLinkDatum<SimNode> {
 
 const MIN_ZOOM = 0.15
 const MAX_ZOOM = 4
-const NODE_RADIUS_BASE = 18
-const NODE_RADIUS_CONNECTED = 24
-const NODE_RADIUS_HUB = 32
 
 export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): JSX.Element {
   const t = useT()
@@ -40,6 +37,16 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
 
   // Transform state (zoom + pan)
   const [transform, setTransform] = useState({ x: 0, y: 0, k: 1 })
+
+  // Center (0,0) at viewport center on mount
+  useEffect(() => {
+    const svg = svgRef.current
+    if (!svg) return
+    const rect = svg.getBoundingClientRect()
+    if (rect.width > 0 && rect.height > 0) {
+      setTransform({ x: rect.width / 2, y: rect.height / 2, k: 1 })
+    }
+  }, [])
   const dragging = useRef(false)
   const dragStart = useRef({ x: 0, y: 0 })
   const dragNodeId = useRef<string | null>(null)
@@ -102,7 +109,8 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
       .force('center', forceCenter(0, 0))
       .force('collide', forceCollide<SimNode>().radius((d) => {
         const count = connectionCount[d.id] || 0
-        return getNodeRadius(count) + 10
+        const depth = getNodeDepth(d.path)
+        return getNodeRadius(count, depth) + 10
       }))
       .alphaDecay(0.02)
 
@@ -367,7 +375,9 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
           {/* Nodes */}
           {simNodes.map((node) => {
             const count = connectionCount[node.id] || 0
-            const radius = getNodeRadius(count)
+            const depth = getNodeDepth(node.path)
+            const radius = getNodeRadius(count, depth)
+            const depthClass = depth < 3 ? ` graph-node-circle--depth-${depth}` : ''
             const isHovered = hoveredNode === node.id
             const isConnected = connectedToHovered.has(node.id)
             const isSelected = selectedNode === node.id
@@ -393,7 +403,7 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
                 {/* Node circle */}
                 <circle
                   r={radius}
-                  className={`graph-node-circle${isHovered ? ' graph-node-circle--hovered' : ''}${isSelected ? ' graph-node-circle--selected' : ''}${dimmed ? ' graph-node-circle--dimmed' : ''}${node.hasOpenTodos ? ' graph-node-circle--has-todos' : ''}`}
+                  className={`graph-node-circle${depthClass}${isHovered ? ' graph-node-circle--hovered' : ''}${isSelected ? ' graph-node-circle--selected' : ''}${dimmed ? ' graph-node-circle--dimmed' : ''}${node.hasOpenTodos ? ' graph-node-circle--has-todos' : ''}`}
                 />
                 {/* Label */}
                 <text
@@ -402,14 +412,17 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
                 >
                   {node.title}
                 </text>
-                {/* Todo indicator */}
-                {node.hasOpenTodos && (
-                  <circle
-                    cx={radius * 0.65}
-                    cy={-radius * 0.65}
-                    r={4}
-                    className="graph-node-todo-dot"
-                  />
+                {/* Todo count badge */}
+                {node.openTodosCount > 0 && (
+                  <g transform={`translate(${radius * 0.6},${-radius * 0.6})`}>
+                    <circle r={8} className="graph-node-todo-badge" />
+                    <text
+                      dy="0.35em"
+                      className="graph-node-todo-count"
+                    >
+                      {node.openTodosCount > 9 ? '9+' : node.openTodosCount}
+                    </text>
+                  </g>
                 )}
               </g>
             )
@@ -490,8 +503,13 @@ export function GraphView({ knowledgePath, onNavigateToNode }: GraphViewProps): 
   )
 }
 
-function getNodeRadius(connectionCount: number): number {
-  if (connectionCount >= 5) return NODE_RADIUS_HUB
-  if (connectionCount >= 2) return NODE_RADIUS_CONNECTED
-  return NODE_RADIUS_BASE
+function getNodeDepth(path: string): number {
+  const parts = path.split('/').filter(Boolean)
+  return Math.max(0, parts.length - 2)
+}
+
+function getNodeRadius(connectionCount: number, depth: number = 0): number {
+  const depthBase = depth === 0 ? 30 : depth === 1 ? 24 : depth === 2 ? 20 : 16
+  const bonus = connectionCount >= 5 ? 4 : connectionCount >= 2 ? 2 : 0
+  return depthBase + bonus
 }

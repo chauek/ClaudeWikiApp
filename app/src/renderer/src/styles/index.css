@@ -2042,6 +2042,22 @@ ul { list-style: none; }
   transition: fill .2s, stroke .2s, opacity .2s;
 }
 
+.graph-node-circle--depth-0 {
+  fill: hsl(210 80% 55% / 0.45);
+  stroke: hsl(210 80% 70%);
+  stroke-width: 2;
+}
+
+.graph-node-circle--depth-1 {
+  fill: hsl(270 65% 60% / 0.35);
+  stroke: hsl(270 65% 75%);
+}
+
+.graph-node-circle--depth-2 {
+  fill: hsl(162 55% 45% / 0.35);
+  stroke: hsl(162 55% 62%);
+}
+
 .graph-node-circle--hovered {
   fill: var(--surface-3);
   stroke: var(--accent);
@@ -2083,6 +2099,18 @@ ul { list-style: none; }
 
 .graph-node-todo-dot {
   fill: var(--todo-pending);
+}
+
+.graph-node-todo-badge {
+  fill: var(--todo-pending);
+}
+
+.graph-node-todo-count {
+  fill: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  text-anchor: middle;
+  pointer-events: none;
 }
 
 /* ─── Overlays ───────────────────────────────────────────── */

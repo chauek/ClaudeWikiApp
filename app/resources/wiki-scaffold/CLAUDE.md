@@ -93,8 +93,7 @@ After every change to the knowledge base, update `_meta/graph.json`.
       "id": "project-topic",
       "title": "Topic Title",
       "path": "knowledge/project/topic/index",
-      "tags": ["tag1", "tag2"],
-      "hasOpenTodos": true
+      "tags": ["tag1", "tag2"]
     }
   ],
   "edges": [
@@ -109,7 +108,7 @@ After every change to the knowledge base, update `_meta/graph.json`.
 
 - `nodes` — one entry per node in the base (id = `id` value from frontmatter)
 - `edges` — directional connections; `reason` describes why these two nodes are related
-- `hasOpenTodos` — `true` if the node has at least one todo with status `pending` or `in_progress`
+- **Do not include** `hasOpenTodos` or `openTodosCount` in graph.json — these are computed dynamically from `todos.json` at runtime
 
 ## Updating todos.json
 

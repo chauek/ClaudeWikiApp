@@ -49,6 +49,7 @@ export interface GraphNode {
   path: string
   tags: string[]
   hasOpenTodos: boolean
+  openTodosCount: number
 }
 
 export interface GraphEdge {

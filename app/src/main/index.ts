@@ -160,11 +160,36 @@ ipcMain.handle('fs:writeTodoSize', (_event, knowledgePath: string, todoId: strin
   }
 })
 
+function enrichWithTodos(knowledgePath: string, nodes: GraphData['nodes']): void {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+    const countMap: Record<string, number> = {}
+    for (const todo of data.todos) {
+      if (todo.status === 'pending' || todo.status === 'in_progress') {
+        countMap[todo.nodePath] = (countMap[todo.nodePath] || 0) + 1
+      }
+    }
+    for (const node of nodes) {
+      const count = countMap[node.path] || 0
+      node.openTodosCount = count
+      node.hasOpenTodos = count > 0
+    }
+  } catch {
+    for (const node of nodes) {
+      node.openTodosCount = 0
+      node.hasOpenTodos = false
+    }
+  }
+}
+
 ipcMain.handle('fs:readGraph', (_event, knowledgePath: string): GraphData | null => {
   try {
     const graphPath = join(knowledgePath, '_meta', 'graph.json')
     const raw = readFileSync(graphPath, 'utf-8')
-    return JSON.parse(raw) as GraphData
+    const data = JSON.parse(raw) as GraphData
+    enrichWithTodos(knowledgePath, data.nodes)
+    return data
   } catch {
     return null
   }
@@ -230,10 +255,17 @@ ipcMain.handle('fs:rebuildGraph', (_event, knowledgePath: string): GraphData => 
     }
   }
 
-  const graphData: GraphData = { nodes, edges }
+  // Save graph without todo fields (computed dynamically from todos.json)
+  const toSave = {
+    nodes: nodes.map(({ id, title, path, tags }) => ({ id, title, path, tags })),
+    edges
+  }
   const graphPath = join(knowledgePath, '_meta', 'graph.json')
-  writeFileSync(graphPath, JSON.stringify(graphData, null, 2), 'utf-8')
-  return graphData
+  writeFileSync(graphPath, JSON.stringify(toSave, null, 2), 'utf-8')
+
+  // Enrich with current todo counts before returning
+  enrichWithTodos(knowledgePath, nodes)
+  return { nodes, edges }
 })
 
 // --- IPC: embedded terminal (PTY) ---
@@ -396,15 +428,13 @@ function collectNodes(dir: string, basePath: string, nodes: GraphData['nodes']):
         const fm = parsed.data
         if (!fm.id || !fm.title) continue
 
-        const hasOpenTodos = Array.isArray(fm.todos) &&
-          fm.todos.some((t: { status: string }) => t.status === 'pending' || t.status === 'in_progress')
-
         nodes.push({
           id: fm.id,
           title: fm.title,
           path: fm.path || fsPath.slice(basePath.length + 1).replace(/\.md$/, '').replace(/\\/g, '/'),
           tags: Array.isArray(fm.tags) ? fm.tags : [],
-          hasOpenTodos
+          hasOpenTodos: false,
+          openTodosCount: 0
         })
       } catch { /* skip malformed */ }
     }
