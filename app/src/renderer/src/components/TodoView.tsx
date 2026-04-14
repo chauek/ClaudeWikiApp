@@ -35,7 +35,7 @@ const COLOR_CYCLE = [
 
 export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
   const t = useT()
-  const [viewMode, setViewMode] = useState<'bySection' | 'byPriority' | 'archived'>('bySection')
+  const [viewMode, setViewMode] = useState<'bySection' | 'byPriority' | 'archived'>('byPriority')
   const groups = useMemo(() => {
     const map = new Map<string, { nodeTitle: string; nodePath: string; items: TodoItem[] }>()
     for (const todo of todos) {
