@@ -38,3 +38,10 @@ bump the version in `_meta/scaffold-version.json`.
 
 A detailed description of the Electron app architecture is in `docs/architecture-app.md`.
 Read that file before starting any work on the application.
+
+## Releases
+
+When the user asks for a release ("release patch|minor|major") or to generate
+notes for an already-shipped tag, follow `docs/release-process.md`.
+Do **not** modify `scripts/release.sh`; the Claude-driven flow uses
+`scripts/claude_release.sh`.
