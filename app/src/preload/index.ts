@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange, ScaffoldInfo, HtmlMap } from '../shared/types'
+import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange, ScaffoldInfo, HtmlMap, UpdateStatus } from '../shared/types'
 
 const api = {
   // Settings
@@ -86,6 +86,27 @@ const api = {
     }
     ipcRenderer.on('watcher:change', handler)
     return () => ipcRenderer.removeListener('watcher:change', handler)
+  },
+
+  // Updater
+  getUpdateStatus: (): Promise<UpdateStatus> =>
+    ipcRenderer.invoke('updater:getStatus'),
+
+  checkForUpdates: (): Promise<UpdateStatus> =>
+    ipcRenderer.invoke('updater:check'),
+
+  downloadUpdate: (): Promise<UpdateStatus> =>
+    ipcRenderer.invoke('updater:download'),
+
+  revealUpdate: (): Promise<void> =>
+    ipcRenderer.invoke('updater:reveal'),
+
+  onUpdateStatus: (callback: (status: UpdateStatus) => void): (() => void) => {
+    const handler = (
+      _event: Electron.IpcRendererEvent, status: UpdateStatus
+    ): void => callback(status)
+    ipcRenderer.on('updater:status', handler)
+    return () => ipcRenderer.removeListener('updater:status', handler)
   }
 }
 
