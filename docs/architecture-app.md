@@ -96,6 +96,11 @@ All renderer ↔ main communication goes through `window.api` (defined in `prelo
 | `scaffold:status`      | invoke → handle | Check scaffold version status        |
 | `scaffold:install`     | invoke → handle | Install/update scaffold files        |
 | `watcher:change`       | main → renderer | File system change event             |
+| `updater:getStatus`    | invoke → handle | Return current update-check status   |
+| `updater:check`        | invoke → handle | Force a fresh GitHub release check   |
+| `updater:download`     | invoke → handle | Download the DMG asset to Downloads  |
+| `updater:reveal`       | invoke → handle | Reveal the downloaded DMG in Finder  |
+| `updater:status`       | main → renderer | Push status transitions + progress   |
 
 ## Settings
 
@@ -246,3 +251,17 @@ Usage: `const t = useT()` → `t('key')`. Language stored in electron-store as `
 - Config: `electron.vite.config.ts` (path alias `@renderer` → `src/renderer/src`)
 - TypeScript: separate configs for node (main+preload) and web (renderer)
 - Window: 1280x800 default, 800x600 min, dark background `#1a1a1a`
+
+## Update Check
+
+`app/src/main/updater.ts` — main-process module that checks
+`chauek/ClaudeWikiApp` GitHub releases on startup (3 s after window show)
+and on-demand from Settings. Fetches `/releases/latest`, so only stable
+(non-prerelease) releases are surfaced. If a newer version is available,
+the Settings view offers a "Download DMG" button that streams the asset
+to `~/Downloads/ClaudeWiki-<version>.dmg`, then reveals it in Finder for
+manual install. No auto-swap — full `electron-updater` would require
+always-on macOS code signing.
+
+Dev-only `UPDATER_MOCK=available|up-to-date|downloading|downloaded|error`
+env var short-circuits the live fetch for UI work.

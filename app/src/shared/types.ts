@@ -95,3 +95,24 @@ export interface ScaffoldInfo {
   appVersion: number
   dirVersion: number | null
 }
+
+export interface ReleaseInfo {
+  tag: string          // "v0.4.0"
+  version: string      // "0.4.0"
+  name: string         // GitHub release title
+  notes: string        // release body (markdown)
+  dmgUrl: string       // browser_download_url of the .dmg asset
+  dmgSize: number      // asset size in bytes
+  htmlUrl: string      // release page on github.com
+  publishedAt: string  // ISO-8601
+}
+
+export type UpdateStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'up-to-date'; checkedAt: number }
+  | { state: 'available'; latest: ReleaseInfo; checkedAt: number }
+  | { state: 'downloading'; latest: ReleaseInfo; received: number; total: number }
+  | { state: 'downloaded'; latest: ReleaseInfo; dmgPath: string }
+  | { state: 'error'; phase: 'check' | 'download'; message: string; checkedAt: number }
+

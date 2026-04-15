@@ -31,6 +31,21 @@ const translations = {
   'settings.scaffoldCreate':   { pl: 'Utwórz pliki szablonu',   en: 'Create scaffold files' },
   'settings.scaffoldUpdate':   { pl: 'Aktualizuj pliki szablonu', en: 'Update scaffold files' },
 
+  'update.checking':      { pl: 'Sprawdzam dostępność aktualizacji…',          en: 'Checking for updates…' },
+  'update.upToDate':      { pl: 'Aplikacja jest aktualna (v{version}).',        en: "You're on the latest version (v{version})." },
+  'update.available':     { pl: 'Dostępna aktualizacja: v{version}',            en: 'Update available: v{version}' },
+  'update.download':      { pl: 'Pobierz DMG',                                  en: 'Download DMG' },
+  'update.downloading':   { pl: 'Pobieram ClaudeWiki-{version}.dmg…',           en: 'Downloading ClaudeWiki-{version}.dmg…' },
+  'update.downloaded':    { pl: 'Pobrano. Otwórz DMG i przeciągnij ClaudeWiki do folderu Aplikacje.', en: 'Downloaded. Open the DMG and drag ClaudeWiki to Applications.' },
+  'update.reveal':        { pl: 'Pokaż w Finderze',                             en: 'Reveal in Finder' },
+  'update.retry':         { pl: 'Sprawdź ponownie',                             en: 'Check again' },
+  'update.tryAgain':      { pl: 'Spróbuj ponownie',                             en: 'Try again' },
+  'update.errorCheck':    { pl: 'Nie udało się sprawdzić aktualizacji: {message}.', en: "Couldn't check for updates: {message}." },
+  'update.errorDownload': { pl: '{message}.',                                   en: '{message}.' },
+  'update.openOnGithub':  { pl: 'Otwórz na GitHubie',                           en: 'Open on GitHub' },
+  'update.showNotes':     { pl: 'Pokaż pełne uwagi',                            en: 'Show full notes' },
+  'update.hideNotes':     { pl: 'Ukryj uwagi',                                  en: 'Hide notes' },
+
   // ── App ───────────────────────────────────────────────
   'app.selectDocument':  { pl: 'Wybierz dokument z listy', en: 'Select a document from the list' },
 

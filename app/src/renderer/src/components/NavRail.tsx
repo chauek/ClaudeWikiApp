@@ -7,9 +7,10 @@ interface NavRailProps {
   pendingTodosCount: number
   collapsed: boolean
   onToggleCollapse: () => void
+  updateAvailable: boolean
 }
 
-export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed, onToggleCollapse }: NavRailProps): JSX.Element {
+export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed, onToggleCollapse, updateAvailable }: NavRailProps): JSX.Element {
   const t = useT()
   return (
     <nav className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
@@ -63,13 +64,15 @@ export function NavRail({ activeView, onViewChange, pendingTodosCount, collapsed
       </div>
       </div>
       <div className="sidebar-bottom">
-        <SidebarItem
-          icon={<IconSettings />}
-          label={t('nav.settings')}
-          active={activeView === 'settings'}
-          onClick={() => onViewChange('settings')}
-          collapsed={collapsed}
-        />
+        <div className={`sidebar-item-wrap${updateAvailable ? ' sidebar-item-wrap--dot' : ''}`}>
+          <SidebarItem
+            icon={<IconSettings />}
+            label={t('nav.settings')}
+            active={activeView === 'settings'}
+            onClick={() => onViewChange('settings')}
+            collapsed={collapsed}
+          />
+        </div>
       </div>
     </nav>
   )

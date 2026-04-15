@@ -7,6 +7,13 @@ import Store from 'electron-store'
 import matter from 'gray-matter'
 import type { TreeItem, NodeContent, TodosFile, GraphData, ScaffoldInfo, HtmlMap } from '../shared/types'
 import { setupWatcher, stopWatcher } from './file-watcher'
+import {
+  checkNow as updaterCheckNow,
+  downloadDmg as updaterDownloadDmg,
+  revealDmg as updaterRevealDmg,
+  getStatus as updaterGetStatus,
+  onStatusChange as updaterOnStatusChange
+} from './updater'
 
 const store = new Store<{ knowledgePath: string }>()
 
@@ -42,6 +49,15 @@ function createWindow(): void {
   if (knowledgePath) {
     setupWatcher(knowledgePath, mainWindow)
   }
+
+  // Push updater status transitions to the renderer.
+  const unsubscribeUpdater = updaterOnStatusChange((next) => {
+    mainWindow?.webContents.send('updater:status', next)
+  })
+  mainWindow.on('closed', () => {
+    unsubscribeUpdater()
+    mainWindow = null
+  })
 }
 
 app.whenReady().then(() => {
@@ -52,6 +68,16 @@ app.whenReady().then(() => {
     }
   }
   createWindow()
+
+  // Non-blocking update check, 3 s after window show.
+  mainWindow?.once('ready-to-show', () => {
+    setTimeout(() => {
+      updaterCheckNow().catch((err) => {
+        console.warn('[updater] startup check threw:', err)
+      })
+    }, 3000)
+  })
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -325,6 +351,13 @@ ipcMain.handle('pty:destroy', () => {
 ipcMain.handle('shell:openExternal', (_event, url: string) => {
   shell.openExternal(url)
 })
+
+// --- IPC: updater ---
+
+ipcMain.handle('updater:getStatus', () => updaterGetStatus())
+ipcMain.handle('updater:check', () => updaterCheckNow())
+ipcMain.handle('updater:download', () => updaterDownloadDmg())
+ipcMain.handle('updater:reveal', () => updaterRevealDmg())
 
 // --- IPC: scaffold ---
 

@@ -2836,3 +2836,146 @@ ul { list-style: none; }
 .dept-child--active .dept-child-map-icon {
   opacity: 1;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Update Notice
+═══════════════════════════════════════════════════════════ */
+
+.update-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.update-notice--info {
+  background: rgba(148,163,184,.08);
+  border: 1px solid rgba(148,163,184,.25);
+  color: rgb(148,163,184);
+}
+.update-notice--ok {
+  background: rgba(34,197,94,.08);
+  border: 1px solid rgba(34,197,94,.25);
+  color: rgb(34,197,94);
+}
+.update-notice--available {
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.3);
+  color: rgb(96,165,250);
+}
+.update-notice--error {
+  background: rgba(239,68,68,.08);
+  border: 1px solid rgba(239,68,68,.25);
+  color: rgb(248,113,113);
+}
+
+.update-notice-text {
+  font-weight: 500;
+}
+
+.update-notice-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.update-notice-btn {
+  align-self: flex-start;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.12);
+  color: inherit;
+  transition: background .15s, border-color .15s;
+}
+.update-notice-btn:hover {
+  background: rgba(255,255,255,.08);
+  border-color: rgba(255,255,255,.22);
+}
+.update-notice-btn--primary {
+  background: rgba(59,130,246,.18);
+  border-color: rgba(59,130,246,.5);
+  color: rgb(191,219,254);
+}
+.update-notice-btn--primary:hover {
+  background: rgba(59,130,246,.3);
+  border-color: rgba(59,130,246,.7);
+}
+
+.update-notice-notes {
+  max-height: 4.5em;
+  overflow: hidden;
+  position: relative;
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(255,255,255,.72);
+}
+.update-notice-notes--open {
+  max-height: none;
+}
+.update-notice-notes::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2em;
+  background: linear-gradient(to bottom, transparent, rgba(15,23,42,.85));
+  pointer-events: none;
+}
+.update-notice-notes--open::after {
+  display: none;
+}
+.update-notice-notes-toggle {
+  margin-top: 4px;
+  background: none;
+  border: none;
+  color: rgb(96,165,250);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.update-progress {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+}
+.update-progress-bar {
+  height: 100%;
+  background: rgb(59,130,246);
+  transition: width .2s ease;
+}
+.update-progress-label {
+  position: absolute;
+  inset: -18px 0 auto 0;
+  font-size: 11px;
+  color: rgba(255,255,255,.6);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NavRail Settings badge dot
+═══════════════════════════════════════════════════════════ */
+
+.sidebar-item-wrap {
+  position: relative;
+}
+.sidebar-item-wrap--dot::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(59,130,246);
+  box-shadow: 0 0 0 2px var(--bg, #1a1a1a);
+  pointer-events: none;
+}

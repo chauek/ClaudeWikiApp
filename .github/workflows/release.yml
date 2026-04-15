@@ -134,14 +134,13 @@ jobs:
           files: |
             app/dist-electron/ClaudeWiki-${{ steps.version.outputs.version }}.dmg
 
-      - name: Create GitHub Release (unsigned pre-release)
+      - name: Create GitHub Release (unsigned)
         if: steps.signed.outputs.signing != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: ClaudeWiki ${{ steps.version.outputs.version }}
           generate_release_notes: ${{ steps.body.outputs.has_custom != 'true' }}
-          prerelease: true
           body: |
             > ⚠️ **Unsigned build.** This release is not code-signed or notarized.
             > On first launch macOS Gatekeeper will warn about an unidentified developer.
