@@ -1,4 +1,12 @@
-import type { ReleaseInfo } from '../shared/types'
+import { EventEmitter } from 'node:events'
+import { app } from 'electron'
+import type { ReleaseInfo, UpdateStatus } from '../shared/types'
+
+const RELEASES_URL =
+  'https://api.github.com/repos/chauek/ClaudeWikiApp/releases/latest'
+const FETCH_TIMEOUT_MS = 10_000
+
+// ── Pure helpers ──────────────────────────────────────────
 
 export function isNewer(remote: string, local: string): boolean {
   const parse = (v: string): number[] =>
@@ -49,4 +57,152 @@ export function parseRelease(raw: unknown): ReleaseInfo {
     htmlUrl: r.html_url,
     publishedAt: r.published_at
   }
+}
+
+// ── Module state ──────────────────────────────────────────
+
+let status: UpdateStatus = { state: 'idle' }
+let inFlightCheck: Promise<UpdateStatus> | null = null
+const emitter = new EventEmitter()
+
+export function getStatus(): UpdateStatus {
+  return status
+}
+
+export function onStatusChange(
+  listener: (s: UpdateStatus) => void
+): () => void {
+  emitter.on('status', listener)
+  return () => emitter.off('status', listener)
+}
+
+function setStatus(next: UpdateStatus): void {
+  status = next
+  emitter.emit('status', next)
+}
+
+// ── Check flow ────────────────────────────────────────────
+
+export async function checkNow(): Promise<UpdateStatus> {
+  if (inFlightCheck) return inFlightCheck
+  inFlightCheck = doCheck().finally(() => { inFlightCheck = null })
+  return inFlightCheck
+}
+
+async function doCheck(): Promise<UpdateStatus> {
+  setStatus({ state: 'checking' })
+
+  // Dev-only mock short-circuit. Documented in the spec.
+  const mock = process.env.UPDATER_MOCK
+  if (mock) {
+    return applyMock(mock)
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
+  try {
+    const res = await fetch(RELEASES_URL, {
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'User-Agent': `ClaudeWiki/${app.getVersion()}`
+      }
+    })
+    clearTimeout(timeout)
+
+    if (res.status === 404) {
+      return finishCheckError('No stable release published yet')
+    }
+    if (res.status === 403 &&
+        res.headers.get('x-ratelimit-remaining') === '0') {
+      return finishCheckError('GitHub rate limit hit — try later')
+    }
+    if (!res.ok) {
+      return finishCheckError(`GitHub returned HTTP ${res.status}`)
+    }
+
+    const json = await res.json()
+    const latest = parseRelease(json)
+    const local = app.getVersion()
+    const checkedAt = Date.now()
+    if (isNewer(latest.version, local)) {
+      setStatus({ state: 'available', latest, checkedAt })
+    } else {
+      setStatus({ state: 'up-to-date', checkedAt })
+    }
+    return status
+  } catch (err: unknown) {
+    clearTimeout(timeout)
+    const msg = err instanceof Error && err.name === 'AbortError'
+      ? 'No internet connection'
+      : err instanceof Error ? shortenFetchError(err.message)
+      : 'Check failed'
+    return finishCheckError(msg)
+  }
+}
+
+function shortenFetchError(raw: string): string {
+  // `fetch failed` / `getaddrinfo ENOTFOUND api.github.com` etc.
+  if (/ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch failed/i.test(raw)) {
+    return 'No internet connection'
+  }
+  if (/missing a DMG/i.test(raw)) return 'Release is missing a DMG asset'
+  return raw
+}
+
+function finishCheckError(message: string): UpdateStatus {
+  console.warn('[updater] check error:', message)
+  setStatus({
+    state: 'error', phase: 'check', message, checkedAt: Date.now()
+  })
+  return status
+}
+
+// ── Dev-only mock ─────────────────────────────────────────
+
+function applyMock(mock: string): UpdateStatus {
+  const fakeRelease: ReleaseInfo = {
+    tag: 'v9.9.9',
+    version: '9.9.9',
+    name: 'Mock release',
+    notes: '## Mock\n- pretend notes',
+    dmgUrl: 'https://example.invalid/mock.dmg',
+    dmgSize: 100_000_000,
+    htmlUrl: 'https://github.com/chauek/ClaudeWikiApp',
+    publishedAt: new Date().toISOString()
+  }
+  const now = Date.now()
+  switch (mock) {
+    case 'available':
+      setStatus({ state: 'available', latest: fakeRelease, checkedAt: now })
+      break
+    case 'up-to-date':
+      setStatus({ state: 'up-to-date', checkedAt: now })
+      break
+    case 'downloading':
+      setStatus({ state: 'downloading', latest: fakeRelease,
+        received: 30_000_000, total: 100_000_000 })
+      break
+    case 'downloaded':
+      setStatus({ state: 'downloaded', latest: fakeRelease,
+        dmgPath: '/tmp/mock.dmg' })
+      break
+    case 'error':
+      setStatus({ state: 'error', phase: 'check',
+        message: 'Mocked error', checkedAt: now })
+      break
+    default:
+      setStatus({ state: 'idle' })
+  }
+  return status
+}
+
+// ── Download flow (stub — implemented in Task 6) ──────────
+
+export async function downloadDmg(): Promise<UpdateStatus> {
+  throw new Error('downloadDmg not implemented yet')
+}
+
+export async function revealDmg(): Promise<void> {
+  throw new Error('revealDmg not implemented yet')
 }
