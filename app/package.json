@@ -5,6 +5,9 @@
   "main": "./out/main/index.js",
   "author": "Chauek",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "postinstall": "electron-rebuild -f -w node-pty",
     "dev": "electron-vite dev",

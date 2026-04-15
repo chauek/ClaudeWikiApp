@@ -33,7 +33,7 @@ A desktop application for browsing and managing a personal knowledge base stored
 
 ### Prerequisites
 
-- Node.js >= 18
+- Node.js >= 24
 - npm
 
 ### Install & Run
