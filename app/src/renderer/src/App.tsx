@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import type { TreeItem, NodeContent, TodoItem, ScaffoldInfo } from '../../shared/types'
+import type { TreeItem, NodeContent, TodoItem, ScaffoldInfo, UpdateStatus } from '../../shared/types'
 import { NavRail } from './components/NavRail'
 import { DepartmentList } from './components/DepartmentList'
 import { NodeDetail } from './components/NodeDetail'
@@ -31,6 +31,7 @@ export default function App(): JSX.Element {
   const [openMapItem, setOpenMapItem] = useState<TreeItem | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [scaffoldInfo, setScaffoldInfo] = useState<ScaffoldInfo | null>(null)
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' })
 
   // Resizable department list
   const [deptWidth, setDeptWidth] = useState(320)
@@ -75,6 +76,12 @@ export default function App(): JSX.Element {
       if (s.lang) setLang(s.lang as Lang)
       setLoading(false)
     })
+  }, [])
+
+  useEffect(() => {
+    void window.api.getUpdateStatus().then(setUpdateStatus)
+    const unsubscribe = window.api.onUpdateStatus(setUpdateStatus)
+    return unsubscribe
   }, [])
 
   // Apply theme to <html data-theme="...">
@@ -212,7 +219,20 @@ export default function App(): JSX.Element {
             <div className="loading-spinner" />
           </div>
         ) : !knowledgePath ? (
-          <Settings currentPath={null} onPathSet={handlePathSet} theme={theme} onThemeChange={handleThemeChange} lang={lang} onLangChange={handleLangChange} scaffoldInfo={null} onScaffoldInstall={handleScaffoldInstall} />
+          <Settings
+            currentPath={null}
+            onPathSet={handlePathSet}
+            theme={theme}
+            onThemeChange={handleThemeChange}
+            lang={lang}
+            onLangChange={handleLangChange}
+            scaffoldInfo={null}
+            onScaffoldInstall={handleScaffoldInstall}
+            updateStatus={updateStatus}
+            onUpdateCheck={() => { void window.api.checkForUpdates() }}
+            onUpdateDownload={() => { void window.api.downloadUpdate() }}
+            onUpdateReveal={() => { void window.api.revealUpdate() }}
+          />
         ) : (
           <div className="app-body">
             <NavRail
@@ -221,6 +241,11 @@ export default function App(): JSX.Element {
               pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
               collapsed={sidebarCollapsed}
               onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+              updateAvailable={
+                updateStatus.state === 'available' ||
+                updateStatus.state === 'downloading' ||
+                updateStatus.state === 'downloaded'
+              }
             />
 
             <div className="content-area">
@@ -237,6 +262,10 @@ export default function App(): JSX.Element {
                   onLangChange={handleLangChange}
                   scaffoldInfo={scaffoldInfo}
                   onScaffoldInstall={handleScaffoldInstall}
+                  updateStatus={updateStatus}
+                  onUpdateCheck={() => { void window.api.checkForUpdates() }}
+                  onUpdateDownload={() => { void window.api.downloadUpdate() }}
+                  onUpdateReveal={() => { void window.api.revealUpdate() }}
                 />
               ) : activeView === 'todos' ? (
                 <TodoView todos={todos} knowledgePath={knowledgePath} />

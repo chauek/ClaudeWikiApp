@@ -1,7 +1,10 @@
 import type { Theme } from '../App'
 import type { Lang } from '../i18n'
-import type { ScaffoldInfo } from '../../../shared/types'
+import type { ScaffoldInfo, UpdateStatus } from '../../../shared/types'
 import { useT } from '../i18n'
+import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface SettingsProps {
   currentPath: string | null
@@ -13,6 +16,10 @@ interface SettingsProps {
   onLangChange: (lang: Lang) => void
   scaffoldInfo: ScaffoldInfo | null
   onScaffoldInstall: () => void
+  updateStatus: UpdateStatus
+  onUpdateCheck: () => void
+  onUpdateDownload: () => void
+  onUpdateReveal: () => void
 }
 
 const LANGS: { value: Lang; label: string }[] = [
@@ -20,7 +27,11 @@ const LANGS: { value: Lang; label: string }[] = [
   { value: 'pl', label: 'Polski' }
 ]
 
-export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChange, lang, onLangChange, scaffoldInfo, onScaffoldInstall }: SettingsProps): JSX.Element {
+export function Settings({
+  currentPath, onPathSet, onCancel, theme, onThemeChange, lang, onLangChange,
+  scaffoldInfo, onScaffoldInstall,
+  updateStatus, onUpdateCheck, onUpdateDownload, onUpdateReveal
+}: SettingsProps): JSX.Element {
   const t = useT()
 
   const THEMES: { value: Theme; label: string }[] = [
@@ -28,6 +39,11 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
     { value: 'light',  label: t('settings.themeLight') },
     { value: 'dark',   label: t('settings.themeDark') }
   ]
+
+  const fmt = (template: string, vars: Record<string, string>): string =>
+    template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '')
+
+  const [notesOpen, setNotesOpen] = useState(false)
 
   const handleChooseFolder = async (): Promise<void> => {
     const path = await window.api.openFolderDialog()
@@ -94,6 +110,20 @@ export function Settings({ currentPath, onPathSet, onCancel, theme, onThemeChang
               </button>
             </div>
           )}
+        </div>
+
+        <div className="settings-section">
+          <label className="settings-label">Updates</label>
+          <UpdateNotice
+            status={updateStatus}
+            t={t}
+            fmt={fmt}
+            notesOpen={notesOpen}
+            onToggleNotes={() => setNotesOpen((v) => !v)}
+            onCheck={onUpdateCheck}
+            onDownload={onUpdateDownload}
+            onReveal={onUpdateReveal}
+          />
         </div>
 
         <div className="settings-section">
@@ -181,5 +211,137 @@ function IconLang(): JSX.Element {
       <line x1="2" y1="12" x2="22" y2="12" />
       <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
     </svg>
+  )
+}
+
+interface UpdateNoticeProps {
+  status: UpdateStatus
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: (key: any) => string
+  fmt: (template: string, vars: Record<string, string>) => string
+  notesOpen: boolean
+  onToggleNotes: () => void
+  onCheck: () => void
+  onDownload: () => void
+  onReveal: () => void
+}
+
+function UpdateNotice({
+  status, t, fmt, notesOpen, onToggleNotes,
+  onCheck, onDownload, onReveal
+}: UpdateNoticeProps): JSX.Element | null {
+  if (status.state === 'idle') return null
+
+  if (status.state === 'checking') {
+    return (
+      <div className="update-notice update-notice--info">
+        <span className="update-notice-text">{t('update.checking')}</span>
+      </div>
+    )
+  }
+
+  if (status.state === 'up-to-date') {
+    return (
+      <div className="update-notice update-notice--ok">
+        <span className="update-notice-text">
+          {fmt(t('update.upToDate'), { version: __APP_VERSION__ })}
+        </span>
+        <button className="update-notice-btn" onClick={onCheck}>
+          {t('update.retry')}
+        </button>
+      </div>
+    )
+  }
+
+  if (status.state === 'available') {
+    const { latest } = status
+    return (
+      <div className="update-notice update-notice--available">
+        <div className="update-notice-text">
+          {fmt(t('update.available'), { version: latest.version })}
+        </div>
+        {latest.notes && (
+          <div className={`update-notice-notes${notesOpen ? ' update-notice-notes--open' : ''}`}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {latest.notes}
+            </ReactMarkdown>
+            <button
+              className="update-notice-notes-toggle"
+              onClick={onToggleNotes}
+            >
+              {notesOpen ? t('update.hideNotes') : t('update.showNotes')}
+            </button>
+          </div>
+        )}
+        <div className="update-notice-actions">
+          <button className="update-notice-btn update-notice-btn--primary"
+                  onClick={onDownload}>
+            {t('update.download')}
+          </button>
+          <button
+            className="update-notice-btn"
+            onClick={() => { void window.api.openExternal(latest.htmlUrl) }}
+          >
+            {t('update.openOnGithub')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (status.state === 'downloading') {
+    const pct = status.total
+      ? Math.floor((status.received / status.total) * 100)
+      : 0
+    return (
+      <div className="update-notice update-notice--available">
+        <div className="update-notice-text">
+          {fmt(t('update.downloading'), { version: status.latest.version })}
+        </div>
+        <div className="update-progress">
+          <div
+            className="update-progress-bar"
+            style={{ width: `${pct}%` }}
+          />
+          <span className="update-progress-label">
+            {(status.received / 1_000_000).toFixed(1)} /
+            {' '}
+            {(status.total / 1_000_000).toFixed(1)} MB
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  if (status.state === 'downloaded') {
+    return (
+      <div className="update-notice update-notice--ok">
+        <div className="update-notice-text">{t('update.downloaded')}</div>
+        <div className="update-notice-actions">
+          <button className="update-notice-btn update-notice-btn--primary"
+                  onClick={onReveal}>
+            {t('update.reveal')}
+          </button>
+          <button className="update-notice-btn" onClick={onCheck}>
+            {t('update.retry')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // status.state === 'error'
+  const template = status.phase === 'check'
+    ? t('update.errorCheck')
+    : t('update.errorDownload')
+  return (
+    <div className="update-notice update-notice--error">
+      <span className="update-notice-text">
+        {fmt(template, { message: status.message })}
+      </span>
+      <button className="update-notice-btn" onClick={onCheck}>
+        {t('update.tryAgain')}
+      </button>
+    </div>
   )
 }
