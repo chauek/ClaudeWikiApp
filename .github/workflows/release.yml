@@ -44,6 +44,25 @@ jobs:
             echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Prepare release body
+        id: body
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FILE="docs/releases/v${VERSION}.md"
+          if [[ -f "$FILE" ]]; then
+            echo "Using custom release notes from $FILE"
+            {
+              echo 'body<<RELEASE_NOTES_EOF'
+              cat "$FILE"
+              echo 'RELEASE_NOTES_EOF'
+            } >> "$GITHUB_OUTPUT"
+            echo "has_custom=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No custom notes file; falling back to auto-generated."
+            echo "body=" >> "$GITHUB_OUTPUT"
+            echo "has_custom=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Build without signing is always available.
       # Signing + notarization kick in only when the Apple Developer
       # credentials are wired up as repository secrets.
@@ -110,7 +129,8 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: ClaudeWiki ${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          body: ${{ steps.body.outputs.body }}
+          generate_release_notes: ${{ steps.body.outputs.has_custom != 'true' }}
           files: |
             app/dist-electron/ClaudeWiki-${{ steps.version.outputs.version }}.dmg
 
@@ -120,12 +140,14 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}
           name: ClaudeWiki ${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          generate_release_notes: ${{ steps.body.outputs.has_custom != 'true' }}
           prerelease: true
           body: |
             > ⚠️ **Unsigned build.** This release is not code-signed or notarized.
             > On first launch macOS Gatekeeper will warn about an unidentified developer.
             > Right-click `ClaudeWiki.app` → **Open** → confirm in the dialog.
             > macOS remembers the exception so subsequent launches are clean.
+
+            ${{ steps.body.outputs.body }}
           files: |
             app/dist-electron/ClaudeWiki-${{ steps.version.outputs.version }}.dmg
