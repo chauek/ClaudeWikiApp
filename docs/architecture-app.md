@@ -78,7 +78,10 @@ All renderer ↔ main communication goes through `window.api` (defined in `prelo
 | `fs:readNode`          | invoke → handle | Read & parse a markdown node         |
 | `fs:readTodos`         | invoke → handle | Read _meta/todos.json                |
 | `fs:writeTodoStatus`   | invoke → handle | Update a todo's status               |
+| `fs:writeTodoPriority` | invoke → handle | Update a todo's priority             |
+| `fs:writeTodoSize`     | invoke → handle | Update a todo's size                 |
 | `fs:readGraph`         | invoke → handle | Read _meta/graph.json                |
+| `fs:rebuildGraph`      | invoke → handle | Rebuild graph.json from knowledge/   |
 | `shell:openExternal`   | invoke → handle | Open URL in system browser           |
 | `pty:create`           | invoke → handle | Spawn zsh PTY in knowledge dir       |
 | `pty:input`            | send            | Write data to PTY stdin              |
@@ -137,6 +140,7 @@ All state lives in `App.tsx` via React hooks — no external store library.
 
 Key state:
 - `knowledgePath` — selected knowledge base path
+- `loading` — initial-load flag (settings + tree + todos)
 - `tree: TreeItem[]` — file tree from `fs:readTree`
 - `todos: TodoItem[]` — from `_meta/todos.json`
 - `activeView` — current view (`home | todos | graph | claude | settings`)
@@ -192,8 +196,11 @@ Key interfaces:
 
 - `NodeFrontmatter` — id, title, path, tags, todos, connections, created, updated
 - `TreeItem` — name, fsPath, relativePath, isDirectory, children, frontmatter
-- `TodoItem` — id, text, status (pending/in_progress/done), nodePath, nodeTitle, tags
-- `GraphNode` — id, title, path, tags, hasOpenTodos
+- `TodoInNode` — text, status, priority?, size? (the shape embedded in node frontmatter)
+- `TodoItem` — id, text, status (pending/in_progress/done/archived), priority?, size?, nodePath, nodeTitle, tags
+- `TodoPriority` — `'critical' | 'high' | 'medium' | 'low' | 'someday'`
+- `TodoSize` — `'S' | 'M' | 'L' | 'XL'`
+- `GraphNode` — id, title, path, tags, hasOpenTodos, openTodosCount
 - `GraphEdge` — source, target, reason
 - `GraphData` — nodes + edges
 - `NodeContent` — frontmatter + content (markdown body) + raw
