@@ -1,5 +1,10 @@
 import { EventEmitter } from 'node:events'
-import { app } from 'electron'
+import { app, shell } from 'electron'
+import { createWriteStream } from 'node:fs'
+import { rename, unlink, mkdir } from 'node:fs/promises'
+import { pipeline } from 'node:stream/promises'
+import { Readable } from 'node:stream'
+import { join } from 'node:path'
 import type { ReleaseInfo, UpdateStatus } from '../shared/types'
 
 const RELEASES_URL =
@@ -63,6 +68,7 @@ export function parseRelease(raw: unknown): ReleaseInfo {
 
 let status: UpdateStatus = { state: 'idle' }
 let inFlightCheck: Promise<UpdateStatus> | null = null
+let inFlightDownload: AbortController | null = null
 const emitter = new EventEmitter()
 
 export function getStatus(): UpdateStatus {
@@ -197,12 +203,74 @@ function applyMock(mock: string): UpdateStatus {
   return status
 }
 
-// ── Download flow (stub — implemented in Task 6) ──────────
+// ── Download flow ─────────────────────────────────────────
 
 export async function downloadDmg(): Promise<UpdateStatus> {
-  throw new Error('downloadDmg not implemented yet')
+  if (status.state !== 'available') {
+    throw new Error(
+      `downloadDmg called from invalid state: ${status.state}`
+    )
+  }
+  if (inFlightDownload) return status
+  const { latest } = status
+  const downloadsDir = app.getPath('downloads')
+  await mkdir(downloadsDir, { recursive: true })
+  const finalPath = join(downloadsDir, `ClaudeWiki-${latest.version}.dmg`)
+  const partPath = `${finalPath}.part`
+
+  setStatus({
+    state: 'downloading', latest,
+    received: 0, total: latest.dmgSize
+  })
+
+  inFlightDownload = new AbortController()
+  try {
+    const res = await fetch(latest.dmgUrl,
+      { signal: inFlightDownload.signal })
+    if (!res.ok || !res.body) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+
+    const total = Number(res.headers.get('content-length')) ||
+      latest.dmgSize
+    let received = 0
+    let lastEmit = 0
+    const ws = createWriteStream(partPath)
+    const nodeStream = Readable.fromWeb(
+      res.body as unknown as import('node:stream/web').ReadableStream
+    )
+    nodeStream.on('data', (chunk: Buffer) => {
+      received += chunk.length
+      const now = Date.now()
+      if (now - lastEmit > 250) {
+        lastEmit = now
+        setStatus({ state: 'downloading', latest, received, total })
+      }
+    })
+
+    await pipeline(nodeStream, ws)
+    await rename(partPath, finalPath)
+
+    setStatus({ state: 'downloaded', latest, dmgPath: finalPath })
+    return status
+  } catch (err: unknown) {
+    await unlink(partPath).catch(() => { /* best-effort cleanup */ })
+    const raw = err instanceof Error ? err.message : String(err)
+    const msg = err instanceof Error && err.name === 'AbortError'
+      ? 'Download cancelled'
+      : `Download failed: ${raw}`
+    console.warn('[updater] download error:', msg)
+    setStatus({
+      state: 'error', phase: 'download',
+      message: msg, checkedAt: Date.now()
+    })
+    return status
+  } finally {
+    inFlightDownload = null
+  }
 }
 
 export async function revealDmg(): Promise<void> {
-  throw new Error('revealDmg not implemented yet')
+  if (status.state !== 'downloaded') return
+  shell.showItemInFolder(status.dmgPath)
 }
