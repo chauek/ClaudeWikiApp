@@ -2474,20 +2474,64 @@ ul { list-style: none; }
   flex-direction: column;
   background: var(--surface);
   overflow: hidden;
+  transition: width .18s ease;
+}
+
+.maps-list--collapsed {
+  width: 80px;
+}
+
+.maps-list--collapsed .maps-list-header {
+  padding: 12px 8px;
+  gap: 4px;
+}
+
+.maps-list--collapsed .maps-list-items {
+  padding: 6px 4px 16px;
+}
+
+.maps-list--collapsed .maps-list-item {
+  padding: 10px 6px;
+}
+
+.maps-list--collapsed .maps-list-item-path {
+  display: none;
 }
 
 .maps-list-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
+  gap: 8px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border-soft);
+}
+
+.maps-list-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  color: var(--text-2);
+  transition: background .12s, color .12s;
+  flex-shrink: 0;
+}
+
+.maps-list-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .maps-list-title {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--text);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .maps-list-header-right {
@@ -2683,6 +2727,9 @@ ul { list-style: none; }
   font-size: 0.88rem;
   font-weight: 500;
   margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .maps-list-item-path {
