@@ -122,16 +122,16 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
           {/* View mode toggle */}
           <div className="todo-view-toggle">
             <button
-              className={`todo-view-toggle-btn${viewMode === 'bySection' ? ' todo-view-toggle-btn--active' : ''}`}
-              onClick={() => setViewMode('bySection')}
-            >
-              {t('todo.viewBySection')}
-            </button>
-            <button
               className={`todo-view-toggle-btn${viewMode === 'byPriority' ? ' todo-view-toggle-btn--active' : ''}`}
               onClick={() => setViewMode('byPriority')}
             >
               {t('todo.viewByPriority')}
+            </button>
+            <button
+              className={`todo-view-toggle-btn${viewMode === 'bySection' ? ' todo-view-toggle-btn--active' : ''}`}
+              onClick={() => setViewMode('bySection')}
+            >
+              {t('todo.viewBySection')}
             </button>
             <button
               className={`todo-view-toggle-btn${viewMode === 'archived' ? ' todo-view-toggle-btn--active' : ''}`}
