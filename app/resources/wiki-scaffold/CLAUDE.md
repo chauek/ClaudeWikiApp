@@ -146,6 +146,25 @@ After every change to nodes, update `_meta/todos.json`.
 - Remove todos whose node has been deleted
 - **Status lifecycle:** `pending → in_progress → done → archived`. Archived tasks are hidden from the "By section" and "By priority" views and appear only in the "Archived" view. Unarchiving restores a task to `done`.
 
+## HTML Maps
+
+The app surfaces any `.html` file placed inside `knowledge/` (at any depth) as a
+**Map** — a self-contained visual artifact such as a diagram, table, or chart. Maps
+appear both as leaves in the knowledge tree (next to the related nodes) and in the
+dedicated **Maps** view that lists all maps across the base.
+
+Rules for generating maps:
+
+- Produce a **self-contained HTML document** — inline CSS and any scripts. Avoid
+  external network dependencies when possible (the preview iframe runs sandboxed
+  with `allow-scripts` only, so same-origin requests will fail)
+- Include a `<title>` — it is used as the display label in the tree and Maps list.
+  If `<title>` is missing, the app falls back to the first `<h1>`, then the filename
+- Place the file **next to the related nodes** (same folder as the `.md` files it
+  visualizes). Filename in `kebab-case.html`
+- Maps are **not** tracked in `_meta/graph.json` or `_meta/todos.json` — they are
+  discovered by scanning the filesystem
+
 ## Connection Rules
 
 Connect two nodes when:

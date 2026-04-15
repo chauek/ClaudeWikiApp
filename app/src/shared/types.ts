@@ -19,13 +19,25 @@ export interface TodoInNode {
   size?: TodoSize
 }
 
+export type TreeItemType = 'md' | 'html'
+
 export interface TreeItem {
   name: string
   fsPath: string
   relativePath: string
   isDirectory: boolean
+  type?: TreeItemType
   children?: TreeItem[]
   frontmatter?: NodeFrontmatter
+  // For HTML items: title extracted from <title> or <h1>, falls back to filename.
+  htmlTitle?: string
+}
+
+export interface HtmlMap {
+  name: string
+  title: string
+  fsPath: string
+  relativePath: string
 }
 
 export interface TodoItem {

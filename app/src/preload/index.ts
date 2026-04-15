@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange, ScaffoldInfo } from '../shared/types'
+import type { TreeItem, NodeContent, TodosFile, GraphData, WatcherChange, ScaffoldInfo, HtmlMap } from '../shared/types'
 
 const api = {
   // Settings
@@ -19,6 +19,12 @@ const api = {
 
   readNode: (fsPath: string): Promise<NodeContent | null> =>
     ipcRenderer.invoke('fs:readNode', fsPath),
+
+  readHtml: (fsPath: string): Promise<string | null> =>
+    ipcRenderer.invoke('fs:readHtml', fsPath),
+
+  listMaps: (knowledgePath: string): Promise<HtmlMap[]> =>
+    ipcRenderer.invoke('fs:listMaps', knowledgePath),
 
   readTodos: (knowledgePath: string): Promise<TodosFile | null> =>
     ipcRenderer.invoke('fs:readTodos', knowledgePath),

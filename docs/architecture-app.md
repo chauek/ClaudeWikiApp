@@ -32,6 +32,8 @@ app/
 │   │       │   ├── TodoBar.tsx
 │   │       │   ├── TerminalView.tsx
 │   │       │   ├── GraphView.tsx
+│   │       │   ├── MapsView.tsx
+│   │       │   ├── MapViewer.tsx
 │   │       │   ├── Settings.tsx
 │   │       │   └── Breadcrumb.tsx
 │   │       └── styles/
@@ -76,6 +78,8 @@ All renderer ↔ main communication goes through `window.api` (defined in `prelo
 | `dialog:openFolder`    | invoke → handle | Native folder picker dialog          |
 | `fs:readTree`          | invoke → handle | Build tree from knowledge/ dir       |
 | `fs:readNode`          | invoke → handle | Read & parse a markdown node         |
+| `fs:readHtml`          | invoke → handle | Read raw HTML map content            |
+| `fs:listMaps`          | invoke → handle | Scan `knowledge/` for `.html` maps    |
 | `fs:readTodos`         | invoke → handle | Read _meta/todos.json                |
 | `fs:writeTodoStatus`   | invoke → handle | Update a todo's status               |
 | `fs:writeTodoPriority` | invoke → handle | Update a todo's priority             |
@@ -105,13 +109,14 @@ Persisted via electron-store (JSON in `~/Library/Application Support/ClaudeWiki/
 
 ## Views
 
-The app has five views, switched via the `NavRail` sidebar:
+The app has six views, switched via the `NavRail` sidebar:
 
 | View       | `activeView` | Component(s)                   | Description                                    |
 |------------|-------------|----------------------------------|------------------------------------------------|
-| Home       | `'home'`    | `DepartmentList` + `NodeDetail`  | Browse tree, read markdown nodes               |
+| Home       | `'home'`    | `DepartmentList` + `NodeDetail` / `MapViewer` | Browse tree, read markdown nodes or preview HTML maps |
 | Todos      | `'todos'`   | `TodoView`                       | Grouped task list with stats                   |
 | Graph      | `'graph'`   | `GraphView`                      | D3-force knowledge graph visualization         |
+| Maps       | `'maps'`    | `MapsView` + `MapViewer`         | List all `.html` maps and preview them         |
 | Claude     | `'claude'`  | `TerminalView`                   | Embedded xterm.js terminal (auto-runs `claude`)|
 | Settings   | `'settings'`| `Settings`                       | Knowledge path, theme, language                |
 
@@ -129,10 +134,17 @@ App (all state: knowledgePath, tree, todos, openNode, activeView, theme, lang)
     ├── Settings (knowledge path picker, theme/lang selectors)
     ├── TodoView (todos grouped by node, expandable, status toggles)
     ├── GraphView (d3-force simulation, pan/zoom, node click → navigate)
+    ├── MapsView (maps list + MapViewer, scans knowledge/ for .html)
     └── home-view
-        ├── DepartmentList (recursive tree, resizable width via drag handle)
-        └── NodeDetail (markdown render, tags, todos, connections)
+        ├── DepartmentList (recursive tree — md + html leaves, resizable)
+        └── NodeDetail | MapViewer (markdown node OR sandboxed HTML iframe)
 ```
+
+HTML maps are any `.html` file under `knowledge/`. They are surfaced both as
+leaves in the department tree (with a map icon next to the related `.md` nodes)
+and in the dedicated Maps view that lists them globally. The map content is
+rendered inside a sandboxed iframe (`sandbox="allow-scripts"`, `srcDoc=...`) so
+scripts run in a unique origin and cannot reach the parent window.
 
 ## State Management
 
@@ -195,7 +207,8 @@ In production, scaffold files are bundled via `extraResources` in electron-build
 Key interfaces:
 
 - `NodeFrontmatter` — id, title, path, tags, todos, connections, created, updated
-- `TreeItem` — name, fsPath, relativePath, isDirectory, children, frontmatter
+- `TreeItem` — name, fsPath, relativePath, isDirectory, type (`'md' | 'html'`), children, frontmatter, htmlTitle
+- `HtmlMap` — name, title, fsPath, relativePath (maps listed globally by `fs:listMaps`)
 - `TodoInNode` — text, status, priority?, size? (the shape embedded in node frontmatter)
 - `TodoItem` — id, text, status (pending/in_progress/done/archived), priority?, size?, nodePath, nodeTitle, tags
 - `TodoPriority` — `'critical' | 'high' | 'medium' | 'low' | 'someday'`

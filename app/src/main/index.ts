@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSy
 import * as pty from 'node-pty'
 import Store from 'electron-store'
 import matter from 'gray-matter'
-import type { TreeItem, NodeContent, TodosFile, GraphData, ScaffoldInfo } from '../shared/types'
+import type { TreeItem, NodeContent, TodosFile, GraphData, ScaffoldInfo, HtmlMap } from '../shared/types'
 import { setupWatcher, stopWatcher } from './file-watcher'
 
 const store = new Store<{ knowledgePath: string }>()
@@ -92,6 +92,21 @@ ipcMain.handle('dialog:openFolder', async () => {
 ipcMain.handle('fs:readTree', (_event, knowledgePath: string): TreeItem[] => {
   const knowledgeDir = join(knowledgePath, 'knowledge')
   return buildTree(knowledgePath, knowledgeDir)
+})
+
+ipcMain.handle('fs:readHtml', (_event, fsPath: string): string | null => {
+  try {
+    return readFileSync(fsPath, 'utf-8')
+  } catch {
+    return null
+  }
+})
+
+ipcMain.handle('fs:listMaps', (_event, knowledgePath: string): HtmlMap[] => {
+  const knowledgeDir = join(knowledgePath, 'knowledge')
+  const out: HtmlMap[] = []
+  collectHtmlMaps(knowledgeDir, knowledgePath, out)
+  return out
 })
 
 ipcMain.handle('fs:readNode', (_event, fsPath: string): NodeContent | null => {
@@ -483,14 +498,74 @@ function buildTree(basePath: string, currentPath: string): TreeItem[] {
             fsPath,
             relativePath,
             isDirectory: false,
+            type: 'md',
             frontmatter: parsed.data as TreeItem['frontmatter']
           })
         }
       } catch {
         // Skip malformed files
       }
+    } else if (entry.endsWith('.html')) {
+      try {
+        const raw = readFileSync(fsPath, 'utf-8')
+        items.push({
+          name: entry,
+          fsPath,
+          relativePath,
+          isDirectory: false,
+          type: 'html',
+          htmlTitle: extractHtmlTitle(raw) ?? humanizeName(entry.replace(/\.html$/, ''))
+        })
+      } catch {
+        // Skip unreadable
+      }
     }
   }
 
   return items
+}
+
+function extractHtmlTitle(html: string): string | null {
+  const t = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+  if (t) return t[1].trim()
+  const h = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+  if (h) return h[1].trim()
+  return null
+}
+
+function humanizeName(slug: string): string {
+  return slug.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+function collectHtmlMaps(dir: string, basePath: string, out: HtmlMap[]): void {
+  let entries: string[]
+  try {
+    entries = readdirSync(dir)
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    const fsPath = join(dir, entry)
+    let stat
+    try {
+      stat = statSync(fsPath)
+    } catch {
+      continue
+    }
+    if (stat.isDirectory()) {
+      if (EXCLUDED_DIRS.has(entry)) continue
+      collectHtmlMaps(fsPath, basePath, out)
+    } else if (entry.endsWith('.html')) {
+      try {
+        const raw = readFileSync(fsPath, 'utf-8')
+        const relativePath = fsPath.slice(basePath.length + 1).replace(/\\/g, '/')
+        out.push({
+          name: entry,
+          title: extractHtmlTitle(raw) ?? humanizeName(entry.replace(/\.html$/, '')),
+          fsPath,
+          relativePath
+        })
+      } catch { /* skip */ }
+    }
+  }
 }

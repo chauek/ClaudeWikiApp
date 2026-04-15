@@ -9,6 +9,7 @@ const translations = {
   'nav.knowledgeBase':   { pl: 'Baza wiedzy',       en: 'Knowledge Base' },
   'nav.tasks':           { pl: 'Zadania',           en: 'Tasks' },
   'nav.graph':            { pl: 'Graf wiedzy',        en: 'Knowledge Graph' },
+  'nav.maps':             { pl: 'Mapy',                en: 'Maps' },
   'nav.settings':        { pl: 'Ustawienia',        en: 'Settings' },
 
   // ── Settings ──────────────────────────────────────────
@@ -111,6 +112,20 @@ const translations = {
   'graph.openNode':        { pl: 'Otwórz nod',          en: 'Open node' },
   'graph.rebuild':         { pl: 'Wygeneruj graf',       en: 'Rebuild graph' },
   'graph.rebuilding':      { pl: 'Generowanie...',       en: 'Rebuilding...' },
+
+  // ── Maps ───────────────────────────────────────────────
+  'maps.title':            { pl: 'Mapy',                  en: 'Maps' },
+  'maps.empty':            { pl: 'Brak map HTML w bazie wiedzy', en: 'No HTML maps in knowledge base' },
+  'maps.selectToPreview':  { pl: 'Wybierz mapę, aby ją wyświetlić', en: 'Select a map to preview' },
+  'maps.openExternal':     { pl: 'Otwórz w przeglądarce', en: 'Open in browser' },
+  'maps.count':            { pl: 'map',                   en: 'maps' },
+  'maps.addTitle':         { pl: 'Wygeneruj nową mapę',   en: 'Generate a new map' },
+  'maps.addHint':          { pl: 'Użyj zakładki Claude w bocznym pasku, aby uruchomić Claude Code w folderze bazy wiedzy, i wklej poniższy prompt. Claude utworzy plik `.html` obok powiązanych nodów, a aplikacja automatycznie go pokaże.', en: 'Open the Claude tab in the sidebar to launch Claude Code in the knowledge base folder, then paste the prompt below. Claude will create an `.html` file next to the related nodes and the app will pick it up automatically.' },
+  'maps.promptLabel':      { pl: 'Sugerowany prompt',     en: 'Suggested prompt' },
+  'maps.copy':             { pl: 'Kopiuj',                en: 'Copy' },
+  'maps.copied':           { pl: 'Skopiowano',            en: 'Copied' },
+  'maps.close':            { pl: 'Zamknij',               en: 'Close' },
+  'maps.addButtonTitle':   { pl: 'Jak wygenerować mapę', en: 'How to generate a map' },
 } as const
 
 type TranslationKey = keyof typeof translations

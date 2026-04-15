@@ -7,10 +7,12 @@ import { TodoView } from './components/TodoView'
 import { TerminalView } from './components/TerminalView'
 import { Settings } from './components/Settings'
 import { GraphView } from './components/GraphView'
+import { MapsView } from './components/MapsView'
+import { MapViewer } from './components/MapViewer'
 import { I18nProvider, useT } from './i18n'
 import type { Lang } from './i18n'
 
-export type ActiveView = 'home' | 'todos' | 'graph' | 'claude' | 'settings'
+export type ActiveView = 'home' | 'todos' | 'graph' | 'maps' | 'claude' | 'settings'
 export type Theme = 'system' | 'light' | 'dark'
 
 export default function App(): JSX.Element {
@@ -25,6 +27,8 @@ export default function App(): JSX.Element {
 
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
+  const [openMapHtml, setOpenMapHtml] = useState<string | null>(null)
+  const [openMapItem, setOpenMapItem] = useState<TreeItem | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [scaffoldInfo, setScaffoldInfo] = useState<ScaffoldInfo | null>(null)
 
@@ -129,6 +133,7 @@ export default function App(): JSX.Element {
     return window.api.onWatcherChange((change) => {
       if (
         change.filePath.endsWith('.md') ||
+        change.filePath.endsWith('.html') ||
         change.event === 'addDir' ||
         change.event === 'unlinkDir'
       ) {
@@ -138,16 +143,31 @@ export default function App(): JSX.Element {
             if (n) setOpenNode(n)
           })
         }
+        if (openMapItem && change.filePath === openMapItem.fsPath) {
+          window.api.readHtml(change.filePath).then((raw) => {
+            setOpenMapHtml(raw)
+          })
+        }
       }
       if (change.filePath.endsWith('todos.json')) loadTodos(knowledgePath)
     })
-  }, [knowledgePath, openNodeItem, loadTree, loadTodos])
+  }, [knowledgePath, openNodeItem, openMapItem, loadTree, loadTodos])
 
   const handleNodeSelect = useCallback(async (item: TreeItem) => {
+    if (item.type === 'html') {
+      const raw = await window.api.readHtml(item.fsPath)
+      setOpenMapHtml(raw)
+      setOpenMapItem(item)
+      setOpenNode(null)
+      setOpenNodeItem(null)
+      return
+    }
     const node = await window.api.readNode(item.fsPath)
     if (node) {
       setOpenNode(node)
       setOpenNodeItem(item)
+      setOpenMapHtml(null)
+      setOpenMapItem(null)
     }
   }, [])
 
@@ -228,11 +248,13 @@ export default function App(): JSX.Element {
                     setActiveView('home')
                   }}
                 />
+              ) : activeView === 'maps' ? (
+                <MapsView knowledgePath={knowledgePath} />
               ) : activeView !== 'claude' ? (
                 <div className="home-view">
                   <DepartmentList
                     tree={tree}
-                    selectedPath={openNodeItem?.fsPath ?? null}
+                    selectedPath={openMapItem?.fsPath ?? openNodeItem?.fsPath ?? null}
                     onSelectNode={handleNodeSelect}
                     width={deptWidth}
                   />
@@ -241,7 +263,14 @@ export default function App(): JSX.Element {
                     onMouseDown={startResize}
                   />
                   <div className="home-detail">
-                    {openNode ? (
+                    {openMapItem ? (
+                      <MapViewer
+                        html={openMapHtml}
+                        title={openMapItem.htmlTitle}
+                        relativePath={openMapItem.relativePath}
+                        fsPath={openMapItem.fsPath}
+                      />
+                    ) : openNode ? (
                       <NodeDetail
                         node={openNode}
                         onNavigate={handleNavigateToConnection}

@@ -50,15 +50,18 @@ function DeptItem({ item, depth, selectedPath, onSelectNode }: DeptItemProps): J
 
   if (!item.isDirectory) {
     const isActive = item.fsPath === selectedPath
-    const title = item.frontmatter?.title ?? item.name.replace('.md', '')
+    const isHtml = item.type === 'html'
+    const title = isHtml
+      ? (item.htmlTitle ?? item.name.replace(/\.html$/, ''))
+      : (item.frontmatter?.title ?? item.name.replace('.md', ''))
 
     if (depth === 0) {
       return (
         <button
-          className={`dept-file-root${isActive ? ' dept-file-root--active' : ''}`}
+          className={`dept-file-root${isActive ? ' dept-file-root--active' : ''}${isHtml ? ' dept-file-root--map' : ''}`}
           onClick={() => onSelectNode(item)}
         >
-          <span className="dept-file-root-icon"><IconNote /></span>
+          <span className="dept-file-root-icon">{isHtml ? <IconMapLeaf /> : <IconNote />}</span>
           <span className="dept-file-root-name">{title}</span>
         </button>
       )
@@ -66,11 +69,11 @@ function DeptItem({ item, depth, selectedPath, onSelectNode }: DeptItemProps): J
 
     return (
       <button
-        className={`dept-child${isActive ? ' dept-child--active' : ''}`}
+        className={`dept-child${isActive ? ' dept-child--active' : ''}${isHtml ? ' dept-child--map' : ''}`}
         style={{ paddingLeft: `${44 + (depth - 1) * 14}px` }}
         onClick={() => onSelectNode(item)}
       >
-        <span className="dept-child-dot" />
+        {isHtml ? <span className="dept-child-map-icon"><IconMapLeaf /></span> : <span className="dept-child-dot" />}
         <span className="dept-child-label">{title}</span>
       </button>
     )
@@ -198,6 +201,16 @@ function IconFolder(): JSX.Element {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+}
+
+function IconMapLeaf(): JSX.Element {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6" />
+      <line x1="8" y1="3" x2="8" y2="18" />
+      <line x1="16" y1="6" x2="16" y2="21" />
     </svg>
   )
 }
