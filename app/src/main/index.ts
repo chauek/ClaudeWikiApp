@@ -405,7 +405,7 @@ function getScaffoldStatus(knowledgePath: string): ScaffoldInfo {
   try {
     const dirVersion = JSON.parse(readFileSync(versionPath, 'utf-8')).version
     return {
-      status: dirVersion === appVersion ? 'current' : 'outdated',
+      status: dirVersion >= appVersion ? 'current' : 'outdated',
       appVersion,
       dirVersion
     }
