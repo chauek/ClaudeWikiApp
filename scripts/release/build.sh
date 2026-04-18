@@ -2,7 +2,7 @@
 # Compile and package ClaudeWiki.app (no signing, no DMG).
 #
 # Outputs:
-#   app/dist-electron/mac-arm64/ClaudeWiki.app
+#   app/dist-electron/mac/ClaudeWiki.app
 #
 # Usage:
 #   scripts/release/build.sh
@@ -18,9 +18,9 @@ echo "==> Compiling (electron-vite)"
 npx electron-vite build
 
 echo "==> Packaging ClaudeWiki.app (no sign, no DMG)"
-npx electron-builder --mac --dir --arm64
+npx electron-builder --mac --dir --x64
 
-APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac-arm64/ClaudeWiki.app"
+APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac/ClaudeWiki.app"
 if [[ ! -d "$APP_BUNDLE" ]]; then
     echo "ERROR: expected bundle not found at $APP_BUNDLE"
     exit 1

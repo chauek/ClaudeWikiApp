@@ -8,7 +8,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac-arm64/ClaudeWiki.app"
+APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac/ClaudeWiki.app"
 
 if [[ ! -d "$APP_BUNDLE" ]]; then
     echo "ERROR: $APP_BUNDLE not found — run build.sh first"

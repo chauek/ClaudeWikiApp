@@ -10,7 +10,7 @@
 set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac-arm64/ClaudeWiki.app"
+APP_BUNDLE="$PROJECT_ROOT/app/dist-electron/mac/ClaudeWiki.app"
 ENTITLEMENTS="$PROJECT_ROOT/scripts/release/ClaudeWiki.entitlements"
 
 if [[ ! -d "$APP_BUNDLE" ]]; then
