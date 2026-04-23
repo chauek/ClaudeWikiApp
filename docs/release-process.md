@@ -81,3 +81,32 @@ exists on GitHub, skip the script entirely:
 - Never modify `scripts/release.sh`.
 - Releases publish immediately (tag push → CI → GitHub Release). A bad tag
   is expensive to undo; pause and confirm beats hurry.
+
+## GitHub-hosted runner notes
+
+The release workflow builds on a macOS runner. Apple/GitHub are phasing out
+Intel images, so the runner label needs periodic review.
+
+Current runner: **`macos-15-intel`** (Intel x86_64). Native node modules in
+this project are built for x64, which is why we pin an Intel image rather
+than the default Apple Silicon ones.
+
+### Timeline
+
+- **`macos-13` retired 2025-12-04.** Jobs targeting that label now fail.
+  Brownouts ran through November 2025. Source:
+  <https://github.blog/changelog/2025-09-19-github-actions-macos-13-runner-image-is-closing-down/>
+- **Intel (x86_64) sunset: Fall 2027.** Apple has discontinued x86_64
+  support; GitHub will drop Intel after the `macos-15` image retires.
+  Before then, the project must either migrate native modules to ARM64 or
+  switch the runner to an Apple Silicon label.
+
+### Replacement labels
+
+| Need | Label |
+|------|-------|
+| Intel x86_64 (current choice) | `macos-15-intel`, `macos-14-large`, `macos-15-large` |
+| Apple Silicon (arm64) | `macos-15`, `macos-14`, or `-xlarge` variants |
+
+When GitHub announces the next macOS runner retirement, update
+`.github/workflows/release.yml`'s `runs-on:` and refresh this section.

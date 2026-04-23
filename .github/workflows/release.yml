@@ -15,7 +15,11 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-13
+    # macos-13 retired 2025-12-04. We need an Intel (x86_64) runner because
+    # native node modules are built for x64; macos-15-intel is the current
+    # Intel option. Apple Silicon alternatives: macos-15, macos-14.
+    # Intel runners scheduled to sunset Fall 2027 — see docs/release-process.md.
+    runs-on: macos-15-intel
     timeout-minutes: 60
 
     steps:
