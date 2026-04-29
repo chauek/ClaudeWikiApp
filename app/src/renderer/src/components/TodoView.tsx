@@ -5,6 +5,9 @@ import { useT } from '../i18n'
 interface TodoViewProps {
   todos: TodoItem[]
   knowledgePath: string
+  onNavigateToNode?: (nodePath: string) => void
+  focusTodoId?: string | null
+  onFocusHandled?: () => void
 }
 
 const PRIORITY_ORDER: Record<string, number> = {
@@ -33,9 +36,33 @@ const COLOR_CYCLE = [
   { color: '#9bffce', bg: 'rgba(155,255,206,0.12)' },  // tertiary
 ]
 
-export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
+export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, onFocusHandled }: TodoViewProps): JSX.Element {
   const t = useT()
   const [viewMode, setViewMode] = useState<'bySection' | 'byPriority' | 'archived'>('byPriority')
+
+  // If a focused todo is in archived view, switch to byPriority so it's visible
+  useEffect(() => {
+    if (focusTodoId && viewMode === 'archived') setViewMode('byPriority')
+  }, [focusTodoId])
+
+  // After mount with a focus, scroll the matching item into view and clear focus
+  useEffect(() => {
+    if (!focusTodoId) return
+    let raf2 = 0
+    let timer = 0
+    const raf1 = window.requestAnimationFrame(() => {
+      raf2 = window.requestAnimationFrame(() => {
+        const el = document.querySelector(`[data-todo-id="${CSS.escape(focusTodoId)}"]`) as HTMLElement | null
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        timer = window.setTimeout(() => onFocusHandled?.(), 1800)
+      })
+    })
+    return () => {
+      window.cancelAnimationFrame(raf1)
+      window.cancelAnimationFrame(raf2)
+      window.clearTimeout(timer)
+    }
+  }, [focusTodoId, viewMode])
   const groups = useMemo(() => {
     const map = new Map<string, { nodeTitle: string; nodePath: string; items: TodoItem[] }>()
     for (const todo of todos) {
@@ -151,6 +178,8 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
                 accentColor={COLOR_CYCLE[i % COLOR_CYCLE.length]}
                 knowledgePath={knowledgePath}
                 variant="active"
+                onNavigateToNode={onNavigateToNode}
+                focusTodoId={focusTodoId}
               />
             ))}
             {viewMode === 'byPriority' && priorityGroups.map((pg, i) => (
@@ -162,6 +191,8 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
                 knowledgePath={knowledgePath}
                 priorityOverride={priorityOverride}
                 onPriorityChange={handlePriorityChange}
+                onNavigateToNode={onNavigateToNode}
+                focusTodoId={focusTodoId}
               />
             ))}
             {viewMode === 'archived' && (
@@ -180,6 +211,8 @@ export function TodoView({ todos, knowledgePath }: TodoViewProps): JSX.Element {
                       accentColor={COLOR_CYCLE[i % COLOR_CYCLE.length]}
                       knowledgePath={knowledgePath}
                       variant="archived"
+                      onNavigateToNode={onNavigateToNode}
+                      focusTodoId={focusTodoId}
                     />
                   ))
             )}
@@ -259,16 +292,38 @@ function TodoGroup({
   accentColor,
   knowledgePath,
   variant = 'active',
+  onNavigateToNode,
+  focusTodoId,
 }: {
   group: Group
   defaultOpen: boolean
   accentColor: Accent
   knowledgePath: string
   variant?: 'active' | 'archived'
+  onNavigateToNode?: (nodePath: string) => void
+  focusTodoId?: string | null
 }): JSX.Element {
   const t = useT()
-  const [open, setOpen] = useState(defaultOpen)
+  const hasFocus = !!focusTodoId && group.items.some(it => it.id === focusTodoId)
+  const [open, setOpen] = useState(defaultOpen || hasFocus)
   const [openDropdown, setOpenDropdown] = useState<{ id: string; type: 'priority' | 'size' } | null>(null)
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(
+    () => focusTodoId && hasFocus ? new Set([focusTodoId]) : new Set()
+  )
+
+  useEffect(() => {
+    if (hasFocus) {
+      setOpen(true)
+      if (focusTodoId) {
+        setExpandedItems(prev => {
+          if (prev.has(focusTodoId)) return prev
+          const next = new Set(prev)
+          next.add(focusTodoId)
+          return next
+        })
+      }
+    }
+  }, [focusTodoId, hasFocus])
 
   const [seenItems, setSeenItems] = useState<Map<string, TodoItem>>(
     () => new Map(group.items.map(item => [item.id, item]))
@@ -383,7 +438,8 @@ function TodoGroup({
             return (
               <div
                 key={todo.id}
-                className={`tg-item${done ? ' tg-item--done' : archived ? ' tg-item--archived' : ` tg-item--${todo.status}`}`}
+                data-todo-id={todo.id}
+                className={`tg-item${done ? ' tg-item--done' : archived ? ' tg-item--archived' : ` tg-item--${todo.status}`}${focusTodoId === todo.id ? ' tg-item--focus' : ''}`}
                 style={{ borderLeft: `3px solid ${borderColor}`, position: 'relative' }}
               >
                 <span
@@ -406,15 +462,40 @@ function TodoGroup({
                   }
                 </span>
                 <span
-                  className={`tg-item-text${done ? ' tg-item-text--done' : todo.status === 'in_progress' ? ' tg-item-text--progress' : ''}`}
-                  onClick={isArchivedView ? undefined : () => handleToggle(todo)}
+                  className={`tg-item-text${done ? ' tg-item-text--done' : todo.status === 'in_progress' ? ' tg-item-text--progress' : ''}${expandedItems.has(todo.id) ? '' : ' tg-item-text--clamped'}`}
+                  onClick={() => setExpandedItems(prev => {
+                    const next = new Set(prev)
+                    if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                    return next
+                  })}
                   role="button"
-                  tabIndex={isArchivedView ? -1 : 0}
-                  onKeyDown={isArchivedView ? undefined : (e => e.key === 'Enter' && handleToggle(todo))}
-                  style={{ flex: 1, cursor: isArchivedView ? 'default' : 'pointer' }}
+                  tabIndex={0}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      setExpandedItems(prev => {
+                        const next = new Set(prev)
+                        if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                        return next
+                      })
+                    }
+                  }}
+                  style={{ flex: 1, cursor: 'pointer' }}
                 >
                   {todo.text}
                 </span>
+
+                {/* Navigate to source node */}
+                {onNavigateToNode && (
+                  <button
+                    type="button"
+                    className="tg-item-nav-btn"
+                    onClick={() => onNavigateToNode(todo.nodePath)}
+                    title={t('todo.goToNode')}
+                    aria-label={t('todo.goToNode')}
+                  >
+                    <IconArrowRight />
+                  </button>
+                )}
 
                 {/* Action slot */}
                 {!isArchivedView && todo.status === 'pending' && (
@@ -518,6 +599,8 @@ function PriorityGroup({
   knowledgePath,
   priorityOverride,
   onPriorityChange,
+  onNavigateToNode,
+  focusTodoId,
 }: {
   priority: string
   items: TodoItem[]
@@ -525,10 +608,30 @@ function PriorityGroup({
   knowledgePath: string
   priorityOverride: Map<string, string>
   onPriorityChange: (id: string, p: string) => void
+  onNavigateToNode?: (nodePath: string) => void
+  focusTodoId?: string | null
 }): JSX.Element {
   const t = useT()
-  const [open, setOpen] = useState(defaultOpen)
+  const hasFocus = !!focusTodoId && items.some(it => it.id === focusTodoId)
+  const [open, setOpen] = useState(defaultOpen || hasFocus)
   const [openDropdown, setOpenDropdown] = useState<{ id: string; type: 'size' | 'priority' } | null>(null)
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(
+    () => focusTodoId && hasFocus ? new Set([focusTodoId]) : new Set()
+  )
+
+  useEffect(() => {
+    if (hasFocus) {
+      setOpen(true)
+      if (focusTodoId) {
+        setExpandedItems(prev => {
+          if (prev.has(focusTodoId)) return prev
+          const next = new Set(prev)
+          next.add(focusTodoId)
+          return next
+        })
+      }
+    }
+  }, [focusTodoId, hasFocus])
 
   const [seenItems, setSeenItems] = useState<Map<string, TodoItem>>(
     () => new Map(items.map(item => [item.id, item]))
@@ -643,7 +746,8 @@ function PriorityGroup({
             return (
               <div
                 key={todo.id}
-                className={`pg-item${done ? ' pg-item--done' : ` pg-item--${todo.status}`}`}
+                data-todo-id={todo.id}
+                className={`pg-item${done ? ' pg-item--done' : ` pg-item--${todo.status}`}${focusTodoId === todo.id ? ' pg-item--focus' : ''}`}
                 style={{ borderLeft: `3px solid ${itemPc ? itemPc.border : 'transparent'}`, position: 'relative' }}
               >
                 <span
@@ -663,15 +767,39 @@ function PriorityGroup({
                 </span>
                 <span className="pg-item-prefix">{todo.nodeTitle}:</span>
                 <span
-                  className={`pg-item-text${done ? ' pg-item-text--done' : todo.status === 'in_progress' ? ' pg-item-text--progress' : ''}`}
-                  onClick={() => handleToggle(todo)}
+                  className={`pg-item-text${done ? ' pg-item-text--done' : todo.status === 'in_progress' ? ' pg-item-text--progress' : ''}${expandedItems.has(todo.id) ? '' : ' pg-item-text--clamped'}`}
+                  onClick={() => setExpandedItems(prev => {
+                    const next = new Set(prev)
+                    if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                    return next
+                  })}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={e => e.key === 'Enter' && handleToggle(todo)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      setExpandedItems(prev => {
+                        const next = new Set(prev)
+                        if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                        return next
+                      })
+                    }
+                  }}
                   style={{ flex: 1, cursor: 'pointer' }}
                 >
                   {todo.text}
                 </span>
+                {/* Navigate to source node */}
+                {onNavigateToNode && (
+                  <button
+                    type="button"
+                    className="tg-item-nav-btn"
+                    onClick={() => onNavigateToNode(todo.nodePath)}
+                    title={t('todo.goToNode')}
+                    aria-label={t('todo.goToNode')}
+                  >
+                    <IconArrowRight />
+                  </button>
+                )}
                 {/* Action slot */}
                 {todo.status === 'pending' && (
                   <button
@@ -830,6 +958,14 @@ function IconPriority(): JSX.Element {
 function IconArrow(): JSX.Element {
   return (
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+    </svg>
+  )
+}
+
+function IconArrowRight(): JSX.Element {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
     </svg>
   )

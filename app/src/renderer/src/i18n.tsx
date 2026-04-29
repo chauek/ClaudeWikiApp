@@ -77,6 +77,7 @@ const translations = {
   'todo.unarchive':         { pl: 'Przywróć',        en: 'Unarchive'      },
   'todo.noArchived':        { pl: 'Brak zarchiwizowanych zadań', en: 'No archived tasks' },
   'todo.status.archived':   { pl: 'Zarchiwizowane',  en: 'Archived'       },
+  'todo.goToNode':          { pl: 'Przejdź do noda',  en: 'Go to node'    },
 
   // ── DepartmentList ────────────────────────────────────
   'dept.noDepartments':  { pl: 'Brak działów',   en: 'No departments' },

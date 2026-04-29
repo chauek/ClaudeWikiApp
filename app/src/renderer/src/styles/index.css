@@ -1057,6 +1057,18 @@ ul { list-style: none; }
 .detail-todo--done                        { opacity: .45; }
 .detail-todo-done                         { text-decoration: line-through; }
 
+.detail-todo--clickable {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 8px;
+  margin: 0 -8px;
+  transition: background .12s;
+}
+
+.detail-todo--clickable:hover {
+  background: var(--accent-bg);
+}
+
 .node-detail-connections {
   margin-top: 32px;
   padding-top: 24px;
@@ -1223,6 +1235,17 @@ ul { list-style: none; }
   background: var(--accent-bg);
 }
 
+.tg-item--focus,
+.pg-item--focus {
+  background: var(--accent-bg);
+  animation: todo-focus-flash 1.6s ease-out 1;
+}
+
+@keyframes todo-focus-flash {
+  0%   { background: rgba(195, 192, 255, 0.35); }
+  100% { background: var(--accent-bg); }
+}
+
 .tg-item-check {
   flex-shrink: 0;
   display: flex;
@@ -1231,9 +1254,42 @@ ul { list-style: none; }
 
 .tg-item-text {
   flex: 1;
+  min-width: 0;
   font-size: 13px;
   color: var(--text);
   line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tg-item-text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
+}
+
+.tg-item-nav-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+
+.tg-item-nav-btn:hover {
+  background: var(--surface-4);
+  color: var(--text);
+  border-color: var(--surface-4);
 }
 
 .tg-item-text--progress {
@@ -1556,9 +1612,20 @@ ul { list-style: none; }
 
 .pg-item-text {
   flex: 1;
+  min-width: 0;
   font-size: 13px;
   color: var(--text);
   line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pg-item-text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: normal;
 }
 
 .pg-item-text--progress {

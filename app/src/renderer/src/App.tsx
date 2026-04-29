@@ -27,6 +27,7 @@ export default function App(): JSX.Element {
 
   const [openNode, setOpenNode] = useState<NodeContent | null>(null)
   const [openNodeItem, setOpenNodeItem] = useState<TreeItem | null>(null)
+  const [focusTodoId, setFocusTodoId] = useState<string | null>(null)
   const [openMapHtml, setOpenMapHtml] = useState<string | null>(null)
   const [openMapItem, setOpenMapItem] = useState<TreeItem | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -268,7 +269,16 @@ export default function App(): JSX.Element {
                   onUpdateReveal={() => { void window.api.revealUpdate() }}
                 />
               ) : activeView === 'todos' ? (
-                <TodoView todos={todos} knowledgePath={knowledgePath} />
+                <TodoView
+                  todos={todos}
+                  knowledgePath={knowledgePath}
+                  onNavigateToNode={(nodePath) => {
+                    handleNavigateToConnection(nodePath)
+                    setActiveView('home')
+                  }}
+                  focusTodoId={focusTodoId}
+                  onFocusHandled={() => setFocusTodoId(null)}
+                />
               ) : activeView === 'graph' ? (
                 <GraphView
                   knowledgePath={knowledgePath}
@@ -303,6 +313,13 @@ export default function App(): JSX.Element {
                       <NodeDetail
                         node={openNode}
                         onNavigate={handleNavigateToConnection}
+                        onTodoClick={(todo) => {
+                          const nodePath = openNode.frontmatter.path
+                          const match = todos.find(td => td.nodePath === nodePath && td.text === todo.text)
+                          if (!match) return
+                          setFocusTodoId(match.id)
+                          setActiveView('todos')
+                        }}
                         filePath={openNodeItem?.relativePath}
                       />
                     ) : (

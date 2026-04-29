@@ -1,15 +1,16 @@
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import type { NodeContent } from '../../../shared/types'
+import type { NodeContent, TodoInNode } from '../../../shared/types'
 import { useT } from '../i18n'
 
 interface NodeDetailProps {
   node: NodeContent
   onNavigate: (connectionPath: string) => void
+  onTodoClick?: (todo: TodoInNode) => void
   filePath?: string
 }
 
-export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX.Element {
+export function NodeDetail({ node, onNavigate, onTodoClick, filePath }: NodeDetailProps): JSX.Element {
   const t = useT()
   const { frontmatter, content } = node
 
@@ -89,7 +90,14 @@ export function NodeDetail({ node, onNavigate, filePath }: NodeDetailProps): JSX
                   }[todo.priority])
                 : null
               return (
-                <li key={i} className={`detail-todo detail-todo--${todo.status}`}>
+                <li
+                  key={i}
+                  className={`detail-todo detail-todo--${todo.status}${onTodoClick ? ' detail-todo--clickable' : ''}`}
+                  onClick={onTodoClick ? () => onTodoClick(todo) : undefined}
+                  role={onTodoClick ? 'button' : undefined}
+                  tabIndex={onTodoClick ? 0 : undefined}
+                  onKeyDown={onTodoClick ? (e => { if (e.key === 'Enter') onTodoClick(todo) }) : undefined}
+                >
                   <span className="detail-todo-icon">
                     {todo.status === 'done' ? '✓' : todo.status === 'in_progress' ? '◐' : '○'}
                   </span>
