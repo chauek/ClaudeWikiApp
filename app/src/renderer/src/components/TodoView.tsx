@@ -30,6 +30,12 @@ function priorityRank(p?: string): number {
   return p !== undefined ? (PRIORITY_ORDER[p] ?? 2) : 2
 }
 
+// Sort 'new' status before everything else, then by priority
+function statusPriorityRank(td: TodoItem): number {
+  if (td.status === 'new') return -1
+  return priorityRank(td.priority)
+}
+
 const COLOR_CYCLE = [
   { color: '#c3c0ff', bg: 'rgba(195,192,255,0.12)' },  // primary
   { color: '#f59e0a', bg: 'rgba(245,158,10,0.12)' },   // secondary
@@ -74,16 +80,22 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
         map.set(todo.nodePath, { nodeTitle: todo.nodeTitle, nodePath: todo.nodePath, items: [todo] })
       }
     }
-    // Sort items within each group by priority
+    // Sort items within each group: 'new' status first, then by priority
     for (const group of map.values()) {
-      group.items.sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))
+      group.items.sort((a, b) => statusPriorityRank(a) - statusPriorityRank(b))
     }
-    // Sort groups by their highest-priority item
+    // Sort groups by their highest-ranked item (new first, else priority)
     return Array.from(map.values()).sort((a, b) => {
-      const aTop = priorityRank(a.items[0]?.priority)
-      const bTop = priorityRank(b.items[0]?.priority)
+      const aTop = a.items[0] ? statusPriorityRank(a.items[0]) : Number.MAX_SAFE_INTEGER
+      const bTop = b.items[0] ? statusPriorityRank(b.items[0]) : Number.MAX_SAFE_INTEGER
       return aTop - bTop
     })
+  }, [todos])
+
+  const newItems = useMemo(() => {
+    return todos
+      .filter(td => td.status === 'new')
+      .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority))
   }, [todos])
 
   const archivedGroups = useMemo(() => {
@@ -110,7 +122,7 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
   const priorityGroups = useMemo(() => {
     const map = new Map<string, { priority: string; items: TodoItem[] }>()
     for (const todo of todos) {
-      if (todo.status === 'archived') continue
+      if (todo.status === 'archived' || todo.status === 'new') continue
       const key = priorityOverride.get(todo.id) ?? todo.priority ?? 'medium'
       const existing = map.get(key)
       if (existing) {
@@ -127,7 +139,8 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
 
   const totalPending    = todos.filter(td => td.status === 'pending').length
   const totalInProgress = todos.filter(td => td.status === 'in_progress').length
-  const totalActive     = totalPending + totalInProgress
+  const totalNew        = todos.filter(td => td.status === 'new').length
+  const totalActive     = totalPending + totalInProgress + totalNew
 
   if (todos.length === 0) {
     return (
@@ -182,12 +195,21 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
                 focusTodoId={focusTodoId}
               />
             ))}
+            {viewMode === 'byPriority' && newItems.length > 0 && (
+              <NewGroup
+                items={newItems}
+                defaultOpen={true}
+                knowledgePath={knowledgePath}
+                onNavigateToNode={onNavigateToNode}
+                focusTodoId={focusTodoId}
+              />
+            )}
             {viewMode === 'byPriority' && priorityGroups.map((pg, i) => (
               <PriorityGroup
                 key={pg.priority}
                 priority={pg.priority}
                 items={pg.items}
-                defaultOpen={i === 0}
+                defaultOpen={i === 0 && newItems.length === 0}
                 knowledgePath={knowledgePath}
                 priorityOverride={priorityOverride}
                 onPriorityChange={handlePriorityChange}
@@ -248,16 +270,18 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
               <div className="todo-bento-stat-head">
                 <span className="todo-bento-priority-icon"><IconPriority /></span>
                 <span className="todo-bento-stat-label">
-                  {totalInProgress > 0 ? t('todo.inProgress') : t('todo.pending')}
+                  {totalNew > 0 ? t('todo.status.new') : totalInProgress > 0 ? t('todo.inProgress') : t('todo.pending')}
                 </span>
               </div>
               <div className="todo-bento-stat-num">
-                {totalInProgress > 0 ? totalInProgress : totalPending}
+                {totalNew > 0 ? totalNew : totalInProgress > 0 ? totalInProgress : totalPending}
               </div>
               <p className="todo-bento-stat-desc">
-                {totalInProgress > 0
-                  ? t('todo.tasksInProgress')
-                  : t('todo.tasksWaiting')}
+                {totalNew > 0
+                  ? t('todo.tasksWaiting')
+                  : totalInProgress > 0
+                    ? t('todo.tasksInProgress')
+                    : t('todo.tasksWaiting')}
               </p>
               <button className="todo-bento-stat-btn">
                 {t('todo.showAll')}
@@ -498,6 +522,15 @@ function TodoGroup({
                 )}
 
                 {/* Action slot */}
+                {!isArchivedView && todo.status === 'new' && (
+                  <button
+                    type="button"
+                    className="tg-action-btn tg-action-btn--ack"
+                    onClick={() => handleStatus(todo, 'pending')}
+                  >
+                    {t('todo.acknowledge')}
+                  </button>
+                )}
                 {!isArchivedView && todo.status === 'pending' && (
                   <button
                     type="button"
@@ -877,6 +910,181 @@ function PriorityGroup({
                       </div>
                     )}
                   </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ─── New Group (status === 'new', shown at top) ─────── */
+
+function NewGroup({
+  items,
+  defaultOpen,
+  knowledgePath,
+  onNavigateToNode,
+  focusTodoId,
+}: {
+  items: TodoItem[]
+  defaultOpen: boolean
+  knowledgePath: string
+  onNavigateToNode?: (nodePath: string) => void
+  focusTodoId?: string | null
+}): JSX.Element {
+  const t = useT()
+  const hasFocus = !!focusTodoId && items.some(it => it.id === focusTodoId)
+  const [open, setOpen] = useState(defaultOpen || hasFocus)
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(
+    () => focusTodoId && hasFocus ? new Set([focusTodoId]) : new Set()
+  )
+  const [seenItems, setSeenItems] = useState<Map<string, TodoItem>>(
+    () => new Map(items.map(item => [item.id, item]))
+  )
+  const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
+
+  useEffect(() => {
+    setSeenItems(prev => {
+      const next = new Map(prev)
+      for (const item of items) next.set(item.id, item)
+      return next
+    })
+  }, [items])
+
+  useEffect(() => {
+    if (hasFocus) {
+      setOpen(true)
+      if (focusTodoId) {
+        setExpandedItems(prev => {
+          if (prev.has(focusTodoId)) return prev
+          const next = new Set(prev)
+          next.add(focusTodoId)
+          return next
+        })
+      }
+    }
+  }, [focusTodoId, hasFocus])
+
+  const handleAck = (todo: TodoItem): void => {
+    // Once acknowledged, remove from this list (it leaves 'new' bucket)
+    setSeenItems(prev => {
+      const n = new Map(prev)
+      n.delete(todo.id)
+      return n
+    })
+    setStatusOverride(prev => new Map(prev).set(todo.id, 'pending'))
+    window.api.writeTodoStatus(knowledgePath, todo.id, 'pending')
+  }
+
+  const displayItems = useMemo(
+    () => [...seenItems.values()]
+      .filter(it => (statusOverride.get(it.id) ?? it.status) === 'new')
+      .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)),
+    [seenItems, statusOverride]
+  )
+
+  if (displayItems.length === 0) return <></>
+
+  const subtitle = `${displayItems.length} ${t('todo.newShort')}`
+
+  return (
+    <div className={`pg${open ? ' pg--open' : ''}`}>
+      <button
+        className="pg-header"
+        onClick={() => setOpen(v => !v)}
+      >
+        <span
+          className="pg-icon-wrap"
+          style={{ background: 'var(--todo-new-bg)' }}
+        >
+          <span style={{ color: 'var(--todo-new)' }}>
+            <IconPriority />
+          </span>
+        </span>
+        <span className="pg-info">
+          <span className="pg-title" style={{ color: 'var(--todo-new)' }}>
+            {t('todo.status.new')}
+          </span>
+          <span className="pg-subtitle">{subtitle}</span>
+        </span>
+        <span className={`pg-chevron${open ? ' pg-chevron--open' : ''}`}>
+          <IconChevronRight />
+        </span>
+      </button>
+
+      {open && (
+        <div className="pg-items">
+          {displayItems.map(todo => {
+            const itemPc = todo.priority ? PRIORITY_COLOR[todo.priority] : null
+
+            return (
+              <div
+                key={todo.id}
+                data-todo-id={todo.id}
+                className={`pg-item pg-item--new${focusTodoId === todo.id ? ' pg-item--focus' : ''}`}
+                style={{ borderLeft: `3px solid var(--todo-new)`, position: 'relative' }}
+              >
+                <span
+                  className="pg-item-check"
+                  style={{ color: 'var(--todo-new)' }}
+                >
+                  <IconCheckEmpty />
+                </span>
+                <span className="pg-item-prefix">{todo.nodeTitle}:</span>
+                <span
+                  className={`pg-item-text${expandedItems.has(todo.id) ? '' : ' pg-item-text--clamped'}`}
+                  onClick={() => setExpandedItems(prev => {
+                    const next = new Set(prev)
+                    if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                    return next
+                  })}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      setExpandedItems(prev => {
+                        const next = new Set(prev)
+                        if (next.has(todo.id)) next.delete(todo.id); else next.add(todo.id)
+                        return next
+                      })
+                    }
+                  }}
+                  style={{ flex: 1, cursor: 'pointer' }}
+                >
+                  {todo.text}
+                </span>
+                {onNavigateToNode && (
+                  <button
+                    type="button"
+                    className="tg-item-nav-btn"
+                    onClick={() => onNavigateToNode(todo.nodePath)}
+                    title={t('todo.goToNode')}
+                    aria-label={t('todo.goToNode')}
+                  >
+                    <IconArrowRight />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="tg-action-btn tg-action-btn--ack"
+                  onClick={() => handleAck(todo)}
+                >
+                  {t('todo.acknowledge')}
+                </button>
+
+                {todo.priority && itemPc && (
+                  <span
+                    className="tg-priority-badge"
+                    style={{ background: itemPc.bg, color: itemPc.color }}
+                  >
+                    {t(`todo.priority.${todo.priority}` as Parameters<ReturnType<typeof useT>>[0])}
+                  </span>
+                )}
+                {todo.size && (
+                  <span className="tg-size-badge">{todo.size}</span>
                 )}
               </div>
             )

@@ -27,6 +27,7 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
     return todos
   }, [todos, filterCurrent, currentNodeRelPath])
 
+  const newCount = todos.filter((t) => t.status === 'new').length
   const pendingCount = todos.filter((t) => t.status === 'pending').length
   const inProgressCount = todos.filter((t) => t.status === 'in_progress').length
 
@@ -36,6 +37,9 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
         <div className="todo-bar-title">
           <span>TODO</span>
           <span className="todo-count">
+            {newCount > 0 && (
+              <span className="todo-badge todo-badge--new">{newCount} {t('todo.newShort')}</span>
+            )}
             {pendingCount > 0 && (
               <span className="todo-badge todo-badge--pending">{pendingCount} {t('todobar.pending')}</span>
             )}
@@ -64,7 +68,7 @@ export function TodoBar({ todos, selectedNodePath, knowledgePath }: TodoBarProps
           visibleTodos.map((todo) => (
             <div key={todo.id} className={`todo-item todo-item--${todo.status}`}>
               <span className="todo-item-icon">
-                {todo.status === 'in_progress' ? '◐' : '○'}
+                {todo.status === 'in_progress' ? '◐' : todo.status === 'new' ? '✦' : '○'}
               </span>
               <span className="todo-item-text">{todo.text}</span>
               {!filterCurrent && (

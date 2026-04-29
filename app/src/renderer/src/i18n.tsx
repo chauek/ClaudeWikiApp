@@ -75,8 +75,11 @@ const translations = {
   'todo.startProgress':     { pl: 'Rozpocznij',      en: 'Start progress' },
   'todo.archive':           { pl: 'Archiwizuj',      en: 'Archive'        },
   'todo.unarchive':         { pl: 'Przywróć',        en: 'Unarchive'      },
+  'todo.acknowledge':       { pl: 'Potwierdź',       en: 'Acknowledge'    },
   'todo.noArchived':        { pl: 'Brak zarchiwizowanych zadań', en: 'No archived tasks' },
   'todo.status.archived':   { pl: 'Zarchiwizowane',  en: 'Archived'       },
+  'todo.status.new':        { pl: 'Nowe',            en: 'New'            },
+  'todo.newShort':          { pl: 'nowych',          en: 'new'            },
   'todo.goToNode':          { pl: 'Przejdź do noda',  en: 'Go to node'    },
 
   // ── DepartmentList ────────────────────────────────────

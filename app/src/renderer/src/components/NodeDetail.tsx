@@ -99,7 +99,7 @@ export function NodeDetail({ node, onNavigate, onTodoClick, filePath }: NodeDeta
                   onKeyDown={onTodoClick ? (e => { if (e.key === 'Enter') onTodoClick(todo) }) : undefined}
                 >
                   <span className="detail-todo-icon">
-                    {todo.status === 'done' ? '✓' : todo.status === 'in_progress' ? '◐' : '○'}
+                    {todo.status === 'done' ? '✓' : todo.status === 'in_progress' ? '◐' : todo.status === 'new' ? '✦' : '○'}
                   </span>
                   <span className={todo.status === 'done' ? 'detail-todo-done' : ''} style={{ flex: 1 }}>
                     {todo.text}

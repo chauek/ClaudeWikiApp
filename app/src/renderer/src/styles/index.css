@@ -32,6 +32,8 @@
   --todo-bg:               rgba(245,158,10,0.10);
   --todo-progress:         #9bffce;
   --todo-progress-bg:      rgba(155,255,206,0.08);
+  --todo-new:              #7dd3fc;
+  --todo-new-bg:           rgba(125,211,252,0.12);
 
   --success:               #9bffce;
   --code-color:            #f59e0a;
@@ -1051,6 +1053,7 @@ ul { list-style: none; }
   margin-top: 1px;
 }
 
+.detail-todo--new .detail-todo-icon       { color: var(--todo-new); }
 .detail-todo--pending .detail-todo-icon   { color: var(--todo-pending); }
 .detail-todo--in_progress .detail-todo-icon { color: var(--todo-progress); }
 .detail-todo--done .detail-todo-icon      { color: var(--success); }
@@ -1371,6 +1374,34 @@ ul { list-style: none; }
   background: rgba(245,158,10,0.12);
   color: #f59e0a;
   border-color: #f59e0a;
+}
+
+.tg-action-btn--ack {
+  color: var(--todo-new);
+  border-color: var(--todo-new);
+}
+
+.tg-action-btn--ack:hover {
+  background: var(--todo-new-bg);
+  color: var(--todo-new);
+  border-color: var(--todo-new);
+}
+
+.tg-item--new .tg-item-check,
+.pg-item--new .pg-item-check {
+  color: var(--todo-new) !important;
+}
+
+.tg-new-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: var(--todo-new-bg);
+  color: var(--todo-new);
+  text-transform: uppercase;
+  letter-spacing: .06em;
 }
 
 .tg-item--archived .tg-item-text {
@@ -2485,6 +2516,8 @@ ul { list-style: none; }
     --todo-bg:               #fef3c7;
     --todo-progress:         #3b82f6;
     --todo-progress-bg:      #f0f6ff;
+    --todo-new:              #0284c7;
+    --todo-new-bg:           #e0f2fe;
     --success:               #16a34a;
     --code-color:            #c2410c;
     --shadow-card:           0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
@@ -2511,6 +2544,8 @@ ul { list-style: none; }
   --todo-bg:               #fef3c7;
   --todo-progress:         #3b82f6;
   --todo-progress-bg:      #f0f6ff;
+  --todo-new:              #0284c7;
+  --todo-new-bg:           #e0f2fe;
   --success:               #16a34a;
   --code-color:            #c2410c;
   --shadow-card:           0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);

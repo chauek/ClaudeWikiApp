@@ -42,10 +42,14 @@ title: "Node Title"
 path: "knowledge/project/topic"                         # path relative to Knowledge_Base/, always with knowledge/ prefix
 tags: [tag1, tag2]                                      # tags for filtering and linking
 todos:
-  - text: "Task description"
-    status: pending                                     # pending | in_progress | done | archived
+  - text: "Newly added task awaiting user review"
+    status: new                                         # new | pending | in_progress | done | archived
     priority: medium                                    # critical | high | medium | low | someday
     size: M                                             # S | M | L | XL
+  - text: "Task description"
+    status: pending
+    priority: medium
+    size: M
   - text: "Completed task"
     status: done
     priority: low
@@ -130,7 +134,7 @@ After every change to nodes, update `_meta/todos.json`.
     {
       "id": "node-id--task-slug",
       "text": "Task description",
-      "status": "pending",                             // pending | in_progress | done | archived
+      "status": "new",                                 // new | pending | in_progress | done | archived
       "priority": "medium",
       "size": "M",
       "nodePath": "knowledge/project/topic",
@@ -144,7 +148,8 @@ After every change to nodes, update `_meta/todos.json`.
 - `id` — build as `{node-id}--{slug-of-todo-text}`
 - Aggregate todos from **all** nodes in the base
 - Remove todos whose node has been deleted
-- **Status lifecycle:** `pending → in_progress → done → archived`. Archived tasks are hidden from the "By section" and "By priority" views and appear only in the "Archived" view. Unarchiving restores a task to `done`.
+- **Status lifecycle:** `new → pending → in_progress → done → archived`. Archived tasks are hidden from the "By section" and "By priority" views and appear only in the "Archived" view. Unarchiving restores a task to `done`.
+- **Auto-added TODOs default to `new`.** Whenever you create a TODO automatically (i.e. without an explicit user instruction setting a different status), set its `status` to `new`. This includes TODOs added during knowledge ingestion, refactors, or any other automated flow. The `new` bucket is rendered at the very top of the TODO list (above `critical`) so the user can review and acknowledge it. Only set `pending` (or any other status) when the user has explicitly approved or requested it.
 
 ## HTML Maps
 
@@ -182,6 +187,7 @@ Connect two nodes when:
 - Write node content in **English**
 - Ask the user when you don't know which project to assign knowledge to
 - **Always set `priority` and `size`** on every todo when creating or editing. If unsure, propose a value and briefly explain why. Defaults: `priority: medium`, `size: M`. Allowed values: priority = `critical | high | medium | low | someday`; size = `S | M | L | XL`
+- **Default status for auto-created TODOs is `new`.** When you generate a TODO without an explicit user instruction selecting another status, always set `status: new`. The user will promote it to `pending` (or another status) after review. See "Updating todos.json" for the full lifecycle.
 
 ## Versioning — git commit after every change
 

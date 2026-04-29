@@ -94,7 +94,7 @@ function TreeNode({ item, selectedPath, onSelect, depth }: TreeNodeProps): JSX.E
 
   const label = item.frontmatter?.title ?? item.name.replace('.md', '')
   const hasTodos = item.frontmatter?.todos?.some(
-    (t) => t.status === 'pending' || t.status === 'in_progress'
+    (t) => t.status === 'new' || t.status === 'pending' || t.status === 'in_progress'
   )
 
   return (

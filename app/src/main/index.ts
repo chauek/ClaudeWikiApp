@@ -207,7 +207,7 @@ function enrichWithTodos(knowledgePath: string, nodes: GraphData['nodes']): void
     const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
     const countMap: Record<string, number> = {}
     for (const todo of data.todos) {
-      if (todo.status === 'pending' || todo.status === 'in_progress') {
+      if (todo.status === 'new' || todo.status === 'pending' || todo.status === 'in_progress') {
         countMap[todo.nodePath] = (countMap[todo.nodePath] || 0) + 1
       }
     }

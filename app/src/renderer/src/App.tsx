@@ -239,7 +239,7 @@ export default function App(): JSX.Element {
             <NavRail
               activeView={activeView}
               onViewChange={setActiveView}
-              pendingTodosCount={todos.filter((t) => t.status === 'pending').length}
+              pendingTodosCount={todos.filter((t) => t.status === 'new' || t.status === 'pending').length}
               collapsed={sidebarCollapsed}
               onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
               updateAvailable={

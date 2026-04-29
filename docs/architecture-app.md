@@ -215,7 +215,7 @@ Key interfaces:
 - `TreeItem` — name, fsPath, relativePath, isDirectory, type (`'md' | 'html'`), children, frontmatter, htmlTitle
 - `HtmlMap` — name, title, fsPath, relativePath (maps listed globally by `fs:listMaps`)
 - `TodoInNode` — text, status, priority?, size? (the shape embedded in node frontmatter)
-- `TodoItem` — id, text, status (pending/in_progress/done/archived), priority?, size?, nodePath, nodeTitle, tags
+- `TodoItem` — id, text, status (new/pending/in_progress/done/archived), priority?, size?, nodePath, nodeTitle, tags. Auto-created TODOs default to `new`; the TodoView renders the `new` bucket above all priority groups so the user can acknowledge before promotion.
 - `TodoPriority` — `'critical' | 'high' | 'medium' | 'low' | 'someday'`
 - `TodoSize` — `'S' | 'M' | 'L' | 'XL'`
 - `GraphNode` — id, title, path, tags, hasOpenTodos, openTodosCount

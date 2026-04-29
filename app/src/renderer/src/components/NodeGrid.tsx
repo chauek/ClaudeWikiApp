@@ -104,7 +104,7 @@ function hasPendingTodos(item: TreeItem): boolean {
   if (!item.isDirectory) {
     return (
       item.frontmatter?.todos?.some(
-        (t) => t.status === 'pending' || t.status === 'in_progress'
+        (t) => t.status === 'new' || t.status === 'pending' || t.status === 'in_progress'
       ) ?? false
     )
   }
