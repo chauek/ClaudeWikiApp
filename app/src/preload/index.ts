@@ -38,6 +38,12 @@ const api = {
   writeTodoSize: (knowledgePath: string, todoId: string, size: string): Promise<boolean> =>
     ipcRenderer.invoke('fs:writeTodoSize', knowledgePath, todoId, size),
 
+  writeTodoOrder: (
+    knowledgePath: string,
+    updates: Array<{ id: string; sortOrder: number; priority?: string }>
+  ): Promise<boolean> =>
+    ipcRenderer.invoke('fs:writeTodoOrder', knowledgePath, updates),
+
   readGraph: (knowledgePath: string): Promise<GraphData | null> =>
     ipcRenderer.invoke('fs:readGraph', knowledgePath),
 

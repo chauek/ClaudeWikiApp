@@ -84,6 +84,7 @@ All renderer ↔ main communication goes through `window.api` (defined in `prelo
 | `fs:writeTodoStatus`   | invoke → handle | Update a todo's status               |
 | `fs:writeTodoPriority` | invoke → handle | Update a todo's priority             |
 | `fs:writeTodoSize`     | invoke → handle | Update a todo's size                 |
+| `fs:writeTodoOrder`    | invoke → handle | Batched sortOrder + optional priority |
 | `fs:readGraph`         | invoke → handle | Read _meta/graph.json                |
 | `fs:rebuildGraph`      | invoke → handle | Rebuild graph.json from knowledge/   |
 | `shell:openExternal`   | invoke → handle | Open URL in system browser           |

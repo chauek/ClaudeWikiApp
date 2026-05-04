@@ -1,6 +1,41 @@
-import { useMemo, useState, useEffect } from 'react'
-import type { TodoItem } from '../../../shared/types'
+import { useMemo, useState, useEffect, type ReactNode, type CSSProperties } from 'react'
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS as DndCSS } from '@dnd-kit/utilities'
+import type { TodoItem, TodoPriority } from '../../../shared/types'
+import { pickPriorityForDrop } from '../../../shared/todo-order'
 import { useT } from '../i18n'
+
+interface SortableRenderArgs {
+  setNodeRef: (node: HTMLElement | null) => void
+  style: CSSProperties
+  attributes: ReturnType<typeof useSortable>['attributes']
+  listeners: ReturnType<typeof useSortable>['listeners']
+  isDragging: boolean
+}
+
+function Sortable({ id, children }: { id: string; children: (args: SortableRenderArgs) => ReactNode }): JSX.Element {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style: CSSProperties = {
+    transform: DndCSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  }
+  return <>{children({ setNodeRef, style, attributes, listeners, isDragging })}</>
+}
 
 interface TodoViewProps {
   todos: TodoItem[]
@@ -28,6 +63,10 @@ const PRIORITY_COLOR: Record<string, { color: string; bg: string; border: string
 
 function priorityRank(p?: string): number {
   return p !== undefined ? (PRIORITY_ORDER[p] ?? 2) : 2
+}
+
+function sortOrderRank(td: { sortOrder?: number }): number {
+  return td.sortOrder ?? Number.POSITIVE_INFINITY
 }
 
 // Sort 'new' status before everything else, then by priority
@@ -115,8 +154,9 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
   const [priorityOverride, setPriorityOverride] = useState<Map<string, string>>(new Map())
 
   const handlePriorityChange = (id: string, p: string): void => {
+    // The child PriorityGroup already wrote priority + sortOrder via writeTodoOrder.
+    // Here we only need to sync the parent's override map so item appears in the new band.
     setPriorityOverride(prev => new Map(prev).set(id, p))
-    window.api.writeTodoPriority(knowledgePath, id, p)
   }
 
   const priorityGroups = useMemo(() => {
@@ -355,6 +395,11 @@ function TodoGroup({
   const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
   const [priorityOverride, setPriorityOverride] = useState<Map<string, string>>(new Map())
   const [sizeOverride, setSizeOverride] = useState<Map<string, string>>(new Map())
+  const [sortOrderOverride, setSortOrderOverride] = useState<Map<string, number>>(new Map())
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
 
   useEffect(() => {
     setSeenItems(prev => {
@@ -396,8 +441,10 @@ function TodoGroup({
   }
 
   const handlePriority = (todo: TodoItem, priority: string): void => {
+    const placeholderSortOrder = Date.now()
     setPriorityOverride(prev => new Map(prev).set(todo.id, priority))
-    window.api.writeTodoPriority(knowledgePath, todo.id, priority)
+    setSortOrderOverride(prev => new Map(prev).set(todo.id, placeholderSortOrder))
+    window.api.writeTodoOrder(knowledgePath, [{ id: todo.id, sortOrder: placeholderSortOrder, priority }])
     setOpenDropdown(null)
   }
 
@@ -414,10 +461,58 @@ function TodoGroup({
         status: (statusOverride.get(item.id) ?? item.status) as TodoItem['status'],
         priority: (priorityOverride.get(item.id) ?? item.priority) as TodoItem['priority'],
         size: (sizeOverride.get(item.id) ?? item.size) as TodoItem['size'],
+        sortOrder: sortOrderOverride.get(item.id) ?? item.sortOrder,
       }))
-      .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)),
-    [seenItems, statusOverride, priorityOverride, sizeOverride]
+      .sort((a, b) => {
+        const p = priorityRank(a.priority) - priorityRank(b.priority)
+        if (p !== 0) return p
+        const s = sortOrderRank(a) - sortOrderRank(b)
+        if (s !== 0) return s
+        return a.nodeTitle.localeCompare(b.nodeTitle)
+      }),
+    [seenItems, statusOverride, priorityOverride, sizeOverride, sortOrderOverride]
   )
+
+  const handleDragEnd = (event: DragEndEvent): void => {
+    if (variant === 'archived') return
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = displayItems.findIndex(it => it.id === active.id)
+    const newIndex = displayItems.findIndex(it => it.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const dropped = arrayMove(displayItems, oldIndex, newIndex)
+    const movedId = active.id as string
+    const movedIdx = dropped.findIndex(it => it.id === movedId)
+    const newPriority = pickPriorityForDrop(dropped, movedIdx)
+
+    const withNewPriority = dropped.map(it =>
+      it.id === movedId ? { ...it, priority: newPriority } : it
+    )
+    const indexMap = new Map(dropped.map((it, i) => [it.id, i]))
+    const resorted = [...withNewPriority].sort((a, b) => {
+      const p = priorityRank(a.priority) - priorityRank(b.priority)
+      if (p !== 0) return p
+      return indexMap.get(a.id)! - indexMap.get(b.id)!
+    })
+
+    const nextSort = new Map(sortOrderOverride)
+    const nextPriority = new Map(priorityOverride)
+    const updates: Array<{ id: string; sortOrder: number; priority?: TodoPriority }> = []
+    resorted.forEach((it, i) => {
+      const so = i * 100
+      nextSort.set(it.id, so)
+      if (it.id === movedId) {
+        nextPriority.set(it.id, newPriority)
+        updates.push({ id: it.id, sortOrder: so, priority: newPriority })
+      } else {
+        updates.push({ id: it.id, sortOrder: so })
+      }
+    })
+    setSortOrderOverride(nextSort)
+    setPriorityOverride(nextPriority)
+    window.api.writeTodoOrder(knowledgePath, updates)
+  }
 
   const pendingCount  = displayItems.filter(ti => ti.status === 'pending').length
   const inProgCount   = displayItems.filter(ti => ti.status === 'in_progress').length
@@ -449,6 +544,8 @@ function TodoGroup({
       </button>
 
       {open && (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={displayItems.map(it => it.id)} strategy={verticalListSortingStrategy}>
         <div className="tg-items">
           {displayItems.map(todo => {
             const done = todo.status === 'done'
@@ -460,12 +557,20 @@ function TodoGroup({
             const isArchivedView = variant === 'archived'
 
             return (
+              <Sortable key={todo.id} id={todo.id}>
+                {({ setNodeRef, style, listeners }) => (
               <div
-                key={todo.id}
+                ref={setNodeRef}
                 data-todo-id={todo.id}
                 className={`tg-item${done ? ' tg-item--done' : archived ? ' tg-item--archived' : ` tg-item--${todo.status}`}${focusTodoId === todo.id ? ' tg-item--focus' : ''}`}
-                style={{ borderLeft: `3px solid ${borderColor}`, position: 'relative' }}
+                style={{ ...style, borderLeft: `3px solid ${borderColor}`, position: 'relative' }}
+                {...(isArchivedView ? {} : listeners)}
               >
+                {!isArchivedView && (
+                  <span className="todo-grip" aria-hidden="true">
+                    <IconGrip />
+                  </span>
+                )}
                 <span
                   className="tg-item-check"
                   style={{
@@ -615,9 +720,13 @@ function TodoGroup({
                   </span>
                 )}
               </div>
+                )}
+              </Sortable>
             )
           })}
         </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   )
@@ -671,6 +780,11 @@ function PriorityGroup({
   )
   const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
   const [sizeOverride, setSizeOverride] = useState<Map<string, string>>(new Map())
+  const [sortOrderOverride, setSortOrderOverride] = useState<Map<string, number>>(new Map())
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  )
 
   useEffect(() => {
     setSeenItems(prev => {
@@ -719,6 +833,10 @@ function PriorityGroup({
       next.delete(todo.id)
       return next
     })
+    // Place at bottom of destination band; renumber happens on next drag in that band
+    const placeholderSortOrder = Date.now()
+    setSortOrderOverride(prev => new Map(prev).set(todo.id, placeholderSortOrder))
+    window.api.writeTodoOrder(knowledgePath, [{ id: todo.id, sortOrder: placeholderSortOrder, priority: p }])
     onPriorityChange(todo.id, p)
     setOpenDropdown(null)
   }
@@ -730,10 +848,34 @@ function PriorityGroup({
         status: (statusOverride.get(item.id) ?? item.status) as TodoItem['status'],
         size: (sizeOverride.get(item.id) ?? item.size) as TodoItem['size'],
         priority: (priorityOverride.get(item.id) ?? item.priority) as TodoItem['priority'],
+        sortOrder: sortOrderOverride.get(item.id) ?? item.sortOrder,
       }))
-      .sort((a, b) => a.nodeTitle.localeCompare(b.nodeTitle)),
-    [seenItems, statusOverride, sizeOverride, priorityOverride]
+      .sort((a, b) => {
+        const s = sortOrderRank(a) - sortOrderRank(b)
+        if (s !== 0) return s
+        return a.nodeTitle.localeCompare(b.nodeTitle)
+      }),
+    [seenItems, statusOverride, sizeOverride, priorityOverride, sortOrderOverride]
   )
+
+  const handleDragEnd = (event: DragEndEvent): void => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = displayItems.findIndex(it => it.id === active.id)
+    const newIndex = displayItems.findIndex(it => it.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const reordered = arrayMove(displayItems, oldIndex, newIndex)
+    const next = new Map(sortOrderOverride)
+    const updates: Array<{ id: string; sortOrder: number }> = []
+    reordered.forEach((it, i) => {
+      const so = i * 100
+      next.set(it.id, so)
+      updates.push({ id: it.id, sortOrder: so })
+    })
+    setSortOrderOverride(next)
+    window.api.writeTodoOrder(knowledgePath, updates)
+  }
 
   const pc = PRIORITY_COLOR[priority]
   const pendingCount  = displayItems.filter(ti => ti.status === 'pending').length
@@ -768,6 +910,8 @@ function PriorityGroup({
       </button>
 
       {open && (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={displayItems.map(it => it.id)} strategy={verticalListSortingStrategy}>
         <div className="pg-items">
           {displayItems.map(todo => {
             const done = todo.status === 'done'
@@ -777,12 +921,18 @@ function PriorityGroup({
             const isOpenPriority = openDropdown?.id === todo.id && openDropdown.type === 'priority'
 
             return (
+              <Sortable key={todo.id} id={todo.id}>
+                {({ setNodeRef, style, listeners }) => (
               <div
-                key={todo.id}
+                ref={setNodeRef}
                 data-todo-id={todo.id}
                 className={`pg-item${done ? ' pg-item--done' : ` pg-item--${todo.status}`}${focusTodoId === todo.id ? ' pg-item--focus' : ''}`}
-                style={{ borderLeft: `3px solid ${itemPc ? itemPc.border : 'transparent'}`, position: 'relative' }}
+                style={{ ...style, borderLeft: `3px solid ${itemPc ? itemPc.border : 'transparent'}`, position: 'relative' }}
+                {...listeners}
               >
+                <span className="todo-grip" aria-hidden="true">
+                  <IconGrip />
+                </span>
                 <span
                   className="pg-item-check"
                   style={{ color: done ? 'var(--text-3)' : pc ? pc.color : 'var(--text-2)' }}
@@ -912,9 +1062,13 @@ function PriorityGroup({
                   </span>
                 )}
               </div>
+                )}
+              </Sortable>
             )
           })}
         </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   )
@@ -1151,6 +1305,16 @@ function IconCheck(): JSX.Element {
   return (
     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function IconGrip(): JSX.Element {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" />
+      <circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" />
+      <circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" />
     </svg>
   )
 }

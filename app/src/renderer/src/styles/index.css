@@ -3081,3 +3081,25 @@ ul { list-style: none; }
   box-shadow: 0 0 0 2px var(--bg, #1a1a1a);
   pointer-events: none;
 }
+
+/* Drag-reorder grip handle */
+.todo-grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  margin-right: 6px;
+  color: var(--text-3);
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+  touch-action: none;
+}
+.todo-grip:active {
+  cursor: grabbing;
+  color: var(--text);
+}
+.tg-item:hover .todo-grip,
+.pg-item:hover .todo-grip {
+  color: var(--text-2);
+}

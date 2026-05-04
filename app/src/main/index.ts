@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, readdirSync, statSync, existsSync, mkdirSy
 import * as pty from 'node-pty'
 import Store from 'electron-store'
 import matter from 'gray-matter'
-import type { TreeItem, NodeContent, TodosFile, GraphData, ScaffoldInfo, HtmlMap } from '../shared/types'
+import type { TreeItem, NodeContent, TodosFile, GraphData, ScaffoldInfo, HtmlMap, TodoPriority, TodoInNode } from '../shared/types'
 import { setupWatcher, stopWatcher } from './file-watcher'
 import {
   checkNow as updaterCheckNow,
@@ -197,6 +197,71 @@ ipcMain.handle('fs:writeTodoSize', (_event, knowledgePath: string, todoId: strin
     writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
     return true
   } catch {
+    return false
+  }
+})
+
+interface TodoOrderUpdate {
+  id: string
+  sortOrder: number
+  priority?: TodoPriority
+}
+
+ipcMain.handle('fs:writeTodoOrder', (_event, knowledgePath: string, updates: TodoOrderUpdate[]): boolean => {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+
+    // Apply updates to in-memory todos.json
+    for (const u of updates) {
+      const todo = data.todos.find(t => t.id === u.id)
+      if (!todo) continue
+      todo.sortOrder = u.sortOrder
+      if (u.priority !== undefined) todo.priority = u.priority
+    }
+    writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
+
+    // Group updates by nodePath to minimise file reads/writes
+    const byNode = new Map<string, TodoOrderUpdate[]>()
+    for (const u of updates) {
+      const todo = data.todos.find(t => t.id === u.id)
+      if (!todo) continue
+      const list = byNode.get(todo.nodePath) ?? []
+      list.push(u)
+      byNode.set(todo.nodePath, list)
+    }
+
+    for (const [nodePath, nodeUpdates] of byNode) {
+      const candidates = [
+        join(knowledgePath, nodePath + '.md'),
+        join(knowledgePath, nodePath, 'index.md'),
+      ]
+      const fsPath = candidates.find(p => existsSync(p))
+      if (!fsPath) continue
+
+      try {
+        const raw = readFileSync(fsPath, 'utf-8')
+        const parsed = matter(raw)
+        const fmTodos = (parsed.data.todos ?? []) as TodoInNode[]
+        for (const u of nodeUpdates) {
+          const aggregate = data.todos.find(t => t.id === u.id)
+          if (!aggregate) continue
+          const fmTodo = fmTodos.find(ft => ft.text === aggregate.text)
+          if (!fmTodo) continue
+          fmTodo.sortOrder = u.sortOrder
+          if (u.priority !== undefined) fmTodo.priority = u.priority
+        }
+        parsed.data.todos = fmTodos
+        const next = matter.stringify(parsed.content, parsed.data)
+        writeFileSync(fsPath, next, 'utf-8')
+      } catch (err) {
+        console.error(`writeTodoOrder: failed to write frontmatter for ${nodePath}`, err)
+      }
+    }
+
+    return true
+  } catch (err) {
+    console.error('writeTodoOrder failed', err)
     return false
   }
 })

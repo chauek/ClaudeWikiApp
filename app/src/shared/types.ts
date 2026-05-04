@@ -17,6 +17,7 @@ export interface TodoInNode {
   status: 'new' | 'pending' | 'in_progress' | 'done' | 'archived'
   priority?: TodoPriority
   size?: TodoSize
+  sortOrder?: number
 }
 
 export type TreeItemType = 'md' | 'html'
@@ -49,6 +50,7 @@ export interface TodoItem {
   nodePath: string
   nodeTitle: string
   tags: string[]
+  sortOrder?: number
 }
 
 export interface TodosFile {

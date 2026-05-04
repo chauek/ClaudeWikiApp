@@ -50,6 +50,7 @@ todos:
     status: pending
     priority: medium
     size: M
+    sortOrder: 100                                      # optional — manual ordering within priority group
   - text: "Completed task"
     status: done
     priority: low
@@ -137,6 +138,7 @@ After every change to nodes, update `_meta/todos.json`.
       "status": "new",                                 // new | pending | in_progress | done | archived
       "priority": "medium",
       "size": "M",
+      "sortOrder": 100,                                // optional — manual ordering within priority group
       "nodePath": "knowledge/project/topic",
       "nodeTitle": "Topic Title",
       "tags": ["tag1", "tag2"]
@@ -148,6 +150,7 @@ After every change to nodes, update `_meta/todos.json`.
 - `id` — build as `{node-id}--{slug-of-todo-text}`
 - Aggregate todos from **all** nodes in the base
 - Remove todos whose node has been deleted
+- **`sortOrder`** (number, optional) — manual ordering within a priority group. The desktop app assigns this when the user drags a task. **Preserve existing `sortOrder` values** when regenerating `todos.json` from frontmatters. For new todos, omit the field — they fall back to `nodeTitle` ordering until the user drags them. Final ordering rule: `priority` first, then `sortOrder`, then `nodeTitle`.
 - **Status lifecycle:** `new → pending → in_progress → done → archived`. Archived tasks are hidden from the "By section" and "By priority" views and appear only in the "Archived" view. Unarchiving restores a task to `done`.
 - **Auto-added TODOs default to `new`.** Whenever you create a TODO automatically (i.e. without an explicit user instruction setting a different status), set its `status` to `new`. This includes TODOs added during knowledge ingestion, refactors, or any other automated flow. The `new` bucket is rendered at the very top of the TODO list (above `critical`) so the user can review and acknowledge it. Only set `pending` (or any other status) when the user has explicitly approved or requested it.
 
