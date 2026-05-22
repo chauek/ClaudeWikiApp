@@ -1387,6 +1387,17 @@ ul { list-style: none; }
   border-color: var(--todo-new);
 }
 
+.tg-action-btn--dismiss {
+  color: #ff6b6b;
+  border-color: rgba(255,107,107,0.4);
+}
+
+.tg-action-btn--dismiss:hover {
+  background: rgba(255,107,107,0.10);
+  color: #ff6b6b;
+  border-color: #ff6b6b;
+}
+
 .tg-item--new .tg-item-check,
 .pg-item--new .pg-item-check {
   color: var(--todo-new) !important;
@@ -1523,6 +1534,25 @@ ul { list-style: none; }
   background: var(--accent-bg);
   color: var(--accent);
   border-color: var(--accent);
+}
+
+.todo-archive-all-btn {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(155,255,206,0.35);
+  background: transparent;
+  color: #9bffce;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+}
+
+.todo-archive-all-btn:hover {
+  background: rgba(155,255,206,0.10);
+  color: #9bffce;
+  border-color: #9bffce;
 }
 
 /* ─── Priority group (pg = priority-group) ────────────── */

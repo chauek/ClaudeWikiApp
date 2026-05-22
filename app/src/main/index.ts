@@ -266,6 +266,40 @@ ipcMain.handle('fs:writeTodoOrder', (_event, knowledgePath: string, updates: Tod
   }
 })
 
+ipcMain.handle('fs:deleteTodo', (_event, knowledgePath: string, todoId: string): boolean => {
+  try {
+    const todosPath = join(knowledgePath, '_meta', 'todos.json')
+    const data = JSON.parse(readFileSync(todosPath, 'utf-8')) as TodosFile
+    const todo = data.todos.find(t => t.id === todoId)
+    if (!todo) return false
+
+    const candidates = [
+      join(knowledgePath, todo.nodePath + '.md'),
+      join(knowledgePath, todo.nodePath, 'index.md'),
+    ]
+    const fsPath = candidates.find(p => existsSync(p))
+    if (fsPath) {
+      try {
+        const raw = readFileSync(fsPath, 'utf-8')
+        const parsed = matter(raw)
+        const fmTodos = (parsed.data.todos ?? []) as TodoInNode[]
+        parsed.data.todos = fmTodos.filter(ft => ft.text !== todo.text)
+        const next = matter.stringify(parsed.content, parsed.data)
+        writeFileSync(fsPath, next, 'utf-8')
+      } catch (err) {
+        console.error(`deleteTodo: failed to update frontmatter for ${todo.nodePath}`, err)
+      }
+    }
+
+    data.todos = data.todos.filter(t => t.id !== todoId)
+    writeFileSync(todosPath, JSON.stringify(data, null, 2), 'utf-8')
+    return true
+  } catch (err) {
+    console.error('deleteTodo failed', err)
+    return false
+  }
+})
+
 function enrichWithTodos(knowledgePath: string, nodes: GraphData['nodes']): void {
   try {
     const todosPath = join(knowledgePath, '_meta', 'todos.json')

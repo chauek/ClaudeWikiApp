@@ -76,6 +76,8 @@ const translations = {
   'todo.archive':           { pl: 'Archiwizuj',      en: 'Archive'        },
   'todo.unarchive':         { pl: 'Przywróć',        en: 'Unarchive'      },
   'todo.acknowledge':       { pl: 'Potwierdź',       en: 'Acknowledge'    },
+  'todo.dismiss':           { pl: 'Odrzuć',          en: 'Dismiss'        },
+  'todo.archiveAllDone':    { pl: 'Archiwizuj zakończone', en: 'Archive finished' },
   'todo.noArchived':        { pl: 'Brak zarchiwizowanych zadań', en: 'No archived tasks' },
   'todo.status.archived':   { pl: 'Zarchiwizowane',  en: 'Archived'       },
   'todo.status.new':        { pl: 'Nowe',            en: 'New'            },

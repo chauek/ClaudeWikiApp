@@ -44,6 +44,9 @@ const api = {
   ): Promise<boolean> =>
     ipcRenderer.invoke('fs:writeTodoOrder', knowledgePath, updates),
 
+  deleteTodo: (knowledgePath: string, todoId: string): Promise<boolean> =>
+    ipcRenderer.invoke('fs:deleteTodo', knowledgePath, todoId),
+
   readGraph: (knowledgePath: string): Promise<GraphData | null> =>
     ipcRenderer.invoke('fs:readGraph', knowledgePath),
 

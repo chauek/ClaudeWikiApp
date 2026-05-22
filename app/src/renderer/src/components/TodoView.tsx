@@ -180,7 +180,15 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
   const totalPending    = todos.filter(td => td.status === 'pending').length
   const totalInProgress = todos.filter(td => td.status === 'in_progress').length
   const totalNew        = todos.filter(td => td.status === 'new').length
+  const totalDone       = todos.filter(td => td.status === 'done').length
   const totalActive     = totalPending + totalInProgress + totalNew
+
+  const handleArchiveAllDone = (): void => {
+    const done = todos.filter(td => td.status === 'done')
+    for (const td of done) {
+      window.api.writeTodoStatus(knowledgePath, td.id, 'archived')
+    }
+  }
 
   if (todos.length === 0) {
     return (
@@ -219,6 +227,15 @@ export function TodoView({ todos, knowledgePath, onNavigateToNode, focusTodoId, 
             >
               {t('todo.viewArchived')}
             </button>
+            {viewMode !== 'archived' && totalDone > 0 && (
+              <button
+                className="todo-archive-all-btn"
+                onClick={handleArchiveAllDone}
+                title={t('todo.archiveAllDone')}
+              >
+                {t('todo.archiveAllDone')} ({totalDone})
+              </button>
+            )}
           </div>
 
           {/* Groups */}
@@ -402,11 +419,7 @@ function TodoGroup({
   )
 
   useEffect(() => {
-    setSeenItems(prev => {
-      const next = new Map(prev)
-      for (const item of group.items) next.set(item.id, item)
-      return next
-    })
+    setSeenItems(new Map(group.items.map(item => [item.id, item])))
   }, [group.items])
 
   // Close dropdown on outside click
@@ -787,11 +800,7 @@ function PriorityGroup({
   )
 
   useEffect(() => {
-    setSeenItems(prev => {
-      const next = new Map(prev)
-      for (const item of items) next.set(item.id, item)
-      return next
-    })
+    setSeenItems(new Map(items.map(item => [item.id, item])))
   }, [items])
 
   useEffect(() => {
@@ -1099,13 +1108,11 @@ function NewGroup({
     () => new Map(items.map(item => [item.id, item]))
   )
   const [statusOverride, setStatusOverride] = useState<Map<string, TodoItem['status']>>(new Map())
+  const [priorityOverride, setPriorityOverride] = useState<Map<string, string>>(new Map())
+  const [openDropdown, setOpenDropdown] = useState<{ id: string; type: 'priority' } | null>(null)
 
   useEffect(() => {
-    setSeenItems(prev => {
-      const next = new Map(prev)
-      for (const item of items) next.set(item.id, item)
-      return next
-    })
+    setSeenItems(new Map(items.map(item => [item.id, item])))
   }, [items])
 
   useEffect(() => {
@@ -1122,6 +1129,13 @@ function NewGroup({
     }
   }, [focusTodoId, hasFocus])
 
+  useEffect(() => {
+    if (!openDropdown) return
+    const handler = (): void => setOpenDropdown(null)
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openDropdown])
+
   const handleAck = (todo: TodoItem): void => {
     // Once acknowledged, remove from this list (it leaves 'new' bucket)
     setSeenItems(prev => {
@@ -1133,11 +1147,31 @@ function NewGroup({
     window.api.writeTodoStatus(knowledgePath, todo.id, 'pending')
   }
 
+  const handleDismiss = (todo: TodoItem): void => {
+    setSeenItems(prev => {
+      const n = new Map(prev)
+      n.delete(todo.id)
+      return n
+    })
+    window.api.deleteTodo(knowledgePath, todo.id)
+  }
+
+  const handlePriority = (todo: TodoItem, p: string): void => {
+    setPriorityOverride(prev => new Map(prev).set(todo.id, p))
+    const placeholderSortOrder = Date.now()
+    window.api.writeTodoOrder(knowledgePath, [{ id: todo.id, sortOrder: placeholderSortOrder, priority: p as TodoPriority }])
+    setOpenDropdown(null)
+  }
+
   const displayItems = useMemo(
     () => [...seenItems.values()]
       .filter(it => (statusOverride.get(it.id) ?? it.status) === 'new')
+      .map(it => ({
+        ...it,
+        priority: (priorityOverride.get(it.id) ?? it.priority) as TodoItem['priority'],
+      }))
       .sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority)),
-    [seenItems, statusOverride]
+    [seenItems, statusOverride, priorityOverride]
   )
 
   if (displayItems.length === 0) return <></>
@@ -1173,6 +1207,7 @@ function NewGroup({
         <div className="pg-items">
           {displayItems.map(todo => {
             const itemPc = todo.priority ? PRIORITY_COLOR[todo.priority] : null
+            const isOpenPriority = openDropdown?.id === todo.id && openDropdown.type === 'priority'
 
             return (
               <div
@@ -1228,13 +1263,37 @@ function NewGroup({
                 >
                   {t('todo.acknowledge')}
                 </button>
+                <button
+                  type="button"
+                  className="tg-action-btn tg-action-btn--dismiss"
+                  onClick={() => handleDismiss(todo)}
+                >
+                  {t('todo.dismiss')}
+                </button>
 
                 {todo.priority && itemPc && (
-                  <span
-                    className="tg-priority-badge"
-                    style={{ background: itemPc.bg, color: itemPc.color }}
-                  >
-                    {t(`todo.priority.${todo.priority}` as Parameters<ReturnType<typeof useT>>[0])}
+                  <span style={{ position: 'relative' }}>
+                    <span
+                      className="tg-priority-badge"
+                      style={{ background: itemPc.bg, color: itemPc.color, cursor: 'pointer' }}
+                      onMouseDown={e => { e.stopPropagation(); setOpenDropdown(isOpenPriority ? null : { id: todo.id, type: 'priority' }) }}
+                    >
+                      {t(`todo.priority.${todo.priority}` as Parameters<ReturnType<typeof useT>>[0])}
+                    </span>
+                    {isOpenPriority && (
+                      <div className="tg-dropdown" onMouseDown={e => e.stopPropagation()}>
+                        {(['critical', 'high', 'medium', 'low', 'someday'] as const).map(p => (
+                          <div
+                            key={p}
+                            className={`tg-dropdown-item${todo.priority === p ? ' tg-dropdown-item--active' : ''}`}
+                            onMouseDown={() => handlePriority(todo, p)}
+                          >
+                            <span className="tg-dropdown-dot" style={{ background: PRIORITY_COLOR[p].color }} />
+                            {t(`todo.priority.${p}` as Parameters<ReturnType<typeof useT>>[0])}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </span>
                 )}
                 {todo.size && (
